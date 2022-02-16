@@ -285,7 +285,7 @@ public class StingrayTestExtension implements BeforeEachCallback, BeforeAllCallb
         }
 
         int boundPort = application.getBoundPort();
-        clientByAlias.put(providerAlias, StingrayDefaultTestClient.newClient("http", "localhost", boundPort));
+        clientByAlias.put(providerAlias, DefaultStingrayTestClient.newClient("http", "localhost", boundPort));
 
         return application;
     }

@@ -4,21 +4,21 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class StingrayRoundRobinTestClient implements StingrayTestClient {
+public class RoundRobinStingrayTestClient implements StingrayTestClient {
 
     private final AtomicInteger nextDelegate = new AtomicInteger();
     private final StingrayTestClient[] delegates;
 
-    private StingrayRoundRobinTestClient(StingrayTestClient[] delegates) {
+    private RoundRobinStingrayTestClient(StingrayTestClient[] delegates) {
         this.delegates = delegates;
     }
 
-    public static StingrayRoundRobinTestClient newClient(StingrayTestClient... delegates) {
-        return new StingrayRoundRobinTestClient(delegates);
+    public static RoundRobinStingrayTestClient newClient(StingrayTestClient... delegates) {
+        return new RoundRobinStingrayTestClient(delegates);
     }
 
-    public static StingrayRoundRobinTestClient newClient(Collection<StingrayTestClient> delegates) {
-        return new StingrayRoundRobinTestClient(delegates.toArray(new StingrayTestClient[0]));
+    public static RoundRobinStingrayTestClient newClient(Collection<StingrayTestClient> delegates) {
+        return new RoundRobinStingrayTestClient(delegates.toArray(new StingrayTestClient[0]));
     }
 
     private StingrayTestClient select() {

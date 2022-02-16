@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class StingrayDefaultTestClient implements StingrayTestClient {
+public class DefaultStingrayTestClient implements StingrayTestClient {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StingrayDefaultTestClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultStingrayTestClient.class);
 
     // TODO configure with more support (jsr310, etc.) and/or allow client configuration
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -47,23 +47,23 @@ public class StingrayDefaultTestClient implements StingrayTestClient {
     private final String host;
     private final int port;
 
-    private StingrayDefaultTestClient(String scheme, String host, int port) {
+    private DefaultStingrayTestClient(String scheme, String host, int port) {
         this.scheme = scheme;
         this.host = host;
         this.port = port;
     }
 
-    public static StingrayDefaultTestClient newClient(String scheme, String host, int port) {
-        return new StingrayDefaultTestClient(scheme, host, port);
+    public static DefaultStingrayTestClient newClient(String scheme, String host, int port) {
+        return new DefaultStingrayTestClient(scheme, host, port);
     }
 
     @Override
-    public StingrayDefaultTestClient useAuthorization(String authorization) {
+    public DefaultStingrayTestClient useAuthorization(String authorization) {
         defaultHeaderByKey.put(HttpHeaders.AUTHORIZATION, authorization);
         return this;
     }
 
-    public StingrayDefaultTestClient useHeader(String header, String value) {
+    public DefaultStingrayTestClient useHeader(String header, String value) {
         defaultHeaderByKey.put(header, value);
         return this;
     }
