@@ -1,9 +1,11 @@
-package no.cantara.stingray.application.security;
+package no.cantara.stingray.security.application;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
+import no.cantara.stingray.application.health.StingrayHealthResource;
+import no.cantara.stingray.application.openapi.StingrayOpenApiResource;
 import no.cantara.stingray.security.authentication.StingrayAuthentication;
 import no.cantara.stingray.security.authentication.StingrayAuthenticationManager;
 import no.cantara.stingray.security.authentication.StingrayAuthenticationResult;
@@ -13,12 +15,21 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 
 public class StingraySecurityFilter implements ContainerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(StingraySecurityFilter.class);
+    private static final Set<Class<?>> securityOverriddenResources;
+
+    static {
+        securityOverriddenResources = new LinkedHashSet<>();
+        securityOverriddenResources.add(StingrayHealthResource.class);
+        securityOverriddenResources.add(StingrayOpenApiResource.class);
+    }
 
     private final StingrayAuthenticationManager authenticationManager;
     private final StingrayAccessManager accessManager;
@@ -55,10 +66,14 @@ public class StingraySecurityFilter implements ContainerRequestFilter {
         requestContext.setProperty(StingrayAuthentication.class.getName(), authentication);
         StingrayAction secureAction = resourceMethod.getDeclaredAnnotation(StingrayAction.class);
         if (secureAction == null) {
-            // forbid access to endpoint without secure-action annotation, i.e. secure-by-default
-            log.trace("Access forbidden (403) due to missing @SecureAction annotation on {}.{}() to: {} /{}", resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), requestContext.getUriInfo().getPath());
-            requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
-            return;
+            if (securityOverriddenResources.contains(resourceMethod.getDeclaringClass())) {
+                return; // access always granted to resource classes that are configured in the security-overridden set
+            } else {
+                // forbid access to endpoint without secure-action annotation, i.e. secure-by-default
+                log.trace("Access forbidden (403) due to missing @SecureAction annotation on {}.{}() to: {} /{}", resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), requestContext.getUriInfo().getPath());
+                requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
+                return;
+            }
         }
         String action = secureAction.value();
         boolean hasAccess = accessManager.hasAccess(authentication, action);

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import no.cantara.stingray.application.StingrayApplication;
 import no.cantara.stingray.application.StingrayLogging;
+import no.cantara.stingray.security.authentication.test.FakeStingrayAuthorization;
 import no.cantara.stingray.test.StingrayBeforeInitLifecycleListener;
 import no.cantara.stingray.test.StingrayTestClient;
 import no.cantara.stingray.test.StingrayTestExtension;
@@ -47,11 +48,11 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void thatGreetingCanBeTestedByItself() {
         Greeting greeting = testClient.get()
                 .path("/greet/John")
-                .fakeUserAuth()
-                .userId("userid-1")
-                .username("john")
-                .customerRef("creftojohn")
-                .endFakeUser()
+                .authorization(FakeStingrayAuthorization.user()
+                        .userId("userid-1")
+                        .username("john")
+                        .customerRef("creftojohn")
+                        .build())
                 .execute()
                 .expect200Ok()
                 .contentAsType(Greeting.class);
@@ -101,7 +102,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
             } else if (remainder == 2) {
                 testClient.get()
                         .path("/greet/John")
-                        .fakeApplicationAuth("junit-viewer")
+                        .authorization(FakeStingrayAuthorization.application()
+                                .applicationId("junit-viewer")
+                                .build())
                         .execute()
                         .expect200Ok();
             } else {
@@ -156,7 +159,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void postBodyJsonString() {
         testClient.post()
                 .path("/greet")
-                .fakeApplicationAuth("junit-admin")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-admin")
+                        .build())
                 .bodyJson("{\"greeting\": \"How do you do?\"}")
                 .execute()
                 .expect204NoContent();
@@ -166,7 +171,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void postBodyJsonPojo() {
         testClient.post()
                 .path("/greet")
-                .fakeApplicationAuth("junit-admin")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-admin")
+                        .build())
                 .bodyJson(new GreetingCandidate("Good morning"))
                 .execute()
                 .expect204NoContent();
@@ -176,7 +183,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void postBodyJsonFile() {
         testClient.post()
                 .path("/greet")
-                .fakeApplicationAuth("junit-admin")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-admin")
+                        .build())
                 .bodyJson(Path.of("src/test/resources/greeting-candidates/candidate-1.json").toFile())
                 .execute()
                 .expect204NoContent();
@@ -186,7 +195,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void postBodyJsonInputStream() {
         testClient.post()
                 .path("/greet")
-                .fakeApplicationAuth("junit-admin")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-admin")
+                        .build())
                 .bodyJson(getClass().getResourceAsStream("/greeting-candidates/candidate-2.json"))
                 .execute()
                 .expect204NoContent();
@@ -196,7 +207,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void postBodyJsonBytes() throws IOException {
         testClient.post()
                 .path("/greet")
-                .fakeApplicationAuth("junit-admin")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-admin")
+                        .build())
                 .bodyJson(Files.readAllBytes(Path.of("src/test/resources/greeting-candidates/candidate-3.json")))
                 .execute()
                 .expect204NoContent();
@@ -206,7 +219,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void listGreetingCandidatesAsString() throws JsonProcessingException {
         String body = testClient.get()
                 .path("/greet/candidates")
-                .fakeApplicationAuth("junit-viewer")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-viewer")
+                        .build())
                 .execute()
                 .expect200Ok()
                 .contentAsString();
@@ -219,7 +234,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void listGreetingCandidatesAsTypeReferece() {
         List<GreetingCandidate> greetingCandidates = testClient.get()
                 .path("/greet/candidates")
-                .fakeApplicationAuth("junit-viewer")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-viewer")
+                        .build())
                 .execute()
                 .expect200Ok()
                 .contentAsType(new TypeReference<>() {
@@ -231,7 +248,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void listGreetingCandidatesAsListOf() {
         List<GreetingCandidate> greetingCandidates = testClient.get()
                 .path("/greet/candidates")
-                .fakeApplicationAuth("junit-viewer")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-viewer")
+                        .build())
                 .execute()
                 .expect200Ok()
                 .contentAsList(GreetingCandidate.class);
@@ -242,7 +261,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void listGreetingCandidatesAsArray() {
         GreetingCandidate[] greetingCandidates = testClient.get()
                 .path("/greet/candidates")
-                .fakeApplicationAuth("junit-viewer")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-viewer")
+                        .build())
                 .execute()
                 .expect200Ok()
                 .contentAsType(GreetingCandidate[].class);
@@ -253,7 +274,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void listGreetingCandidatesAsJsonNode() {
         JsonNode node = testClient.get()
                 .path("/greet/candidates")
-                .fakeApplicationAuth("junit-viewer")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-viewer")
+                        .build())
                 .execute()
                 .expect200Ok()
                 .contentAsType(JsonNode.class);
@@ -266,7 +289,9 @@ public class GreetingTest implements StingrayBeforeInitLifecycleListener {
     public void listGreetingCandidatesAsInputStream() throws IOException {
         try (InputStream is = testClient.get()
                 .path("/greet/candidates")
-                .fakeApplicationAuth("junit-viewer")
+                .authorization(FakeStingrayAuthorization.application()
+                        .applicationId("junit-viewer")
+                        .build())
                 .execute()
                 .expect200Ok()
                 .content();

@@ -21,6 +21,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>no.cantara.stingray</groupId>
+            <artifactId>stingray-application</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>no.cantara.config</groupId>
             <artifactId>property-config</artifactId>
         </dependency>

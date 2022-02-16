@@ -1,4 +1,4 @@
-package no.cantara.stingray.application.security;
+package no.cantara.stingray.security.application;
 
 import jakarta.ws.rs.core.SecurityContext;
 import no.cantara.stingray.security.authentication.StingrayAuthentication;

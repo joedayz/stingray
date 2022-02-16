@@ -9,7 +9,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import no.cantara.stingray.application.security.StingraySecurityOverride;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +32,6 @@ public class StingrayHealthResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @StingraySecurityOverride(logAccess = false) // disable authorization requirement in security-filter and do not trace-log access to this endpoint
     @SecurityRequirements(@SecurityRequirement(name = "none")) // disable authorization requirement in openapi spec
     public Response getHealth() {
         try {

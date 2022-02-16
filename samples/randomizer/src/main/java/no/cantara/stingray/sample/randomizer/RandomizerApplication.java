@@ -3,6 +3,7 @@ package no.cantara.stingray.sample.randomizer;
 import no.cantara.config.ApplicationProperties;
 import no.cantara.stingray.application.AbstractStingrayApplication;
 import no.cantara.stingray.application.health.StingrayHealthService;
+import no.cantara.stingray.security.StingraySecurity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,7 @@ public class RandomizerApplication extends AbstractStingrayApplication<Randomize
     @Override
     public void doInit() {
         initBuiltinDefaults();
+        StingraySecurity.initSecurity(this);
         init(Random.class, this::createRandom);
         RandomizerResource randomizerResource = initAndRegisterJaxRsWsComponent(RandomizerResource.class, this::createRandomizerResource);
         get(StingrayHealthService.class).registerHealthProbe("randomizer.request.count", randomizerResource::getRequestCount);

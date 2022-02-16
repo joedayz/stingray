@@ -3,6 +3,7 @@ package no.cantara.stingray.sample.randomizer;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
 import no.cantara.stingray.application.StingrayLogging;
+import no.cantara.stingray.security.authentication.test.FakeStingrayAuthorization;
 import no.cantara.stingray.test.StingrayTestClient;
 import no.cantara.stingray.test.StingrayTestExtension;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ public class RandomizerTest {
 
     @Test
     public void thatViewerCanDoAllExceptReseed() {
-        testClient.useFakeApplicationAuth().applicationId("junit-viewer").addAccessGroup("viewers").endFakeApplication();
+        testClient.useAuthorization(FakeStingrayAuthorization.application().applicationId("junit-viewer").addAccessGroup("viewers").build());
         log.info("GET /randomizer/str/10 Response: {}", testClient.get().path("/randomizer/str/10").execute().expect200Ok().contentAsString());
         log.info("GET /randomizer/int/1000 Response: {}", testClient.get().path("/randomizer/int/1000").execute().expect200Ok().contentAsString());
         log.info("GET /randomizer/health Response: {}", testClient.get().path("/randomizer/health").execute().expect200Ok().contentAsType(JsonNode.class).toPrettyString());
@@ -33,7 +34,7 @@ public class RandomizerTest {
 
     @Test
     public void thatAdminCanDoAll() {
-        testClient.useFakeApplicationAuth().applicationId("junit-admin").addAccessGroup("admins").endFakeApplication();
+        testClient.useAuthorization(FakeStingrayAuthorization.application().applicationId("junit-admin").addAccessGroup("admins").build());
         log.info("GET /randomizer/str/10 Response: {}", testClient.get().path("/randomizer/str/10").execute().expect200Ok().contentAsString());
         log.info("GET /randomizer/int/1000 Response: {}", testClient.get().path("/randomizer/int/1000").execute().expect200Ok().contentAsString());
         log.info("GET /randomizer/health Response: {}", testClient.get().path("/randomizer/health").execute().expect200Ok().contentAsType(JsonNode.class).toPrettyString());

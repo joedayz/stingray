@@ -50,4 +50,6 @@ public interface StingrayApplication<A extends StingrayApplication> extends Stin
     A stop();
 
     int getBoundPort();
+
+    String contextPath();
 }

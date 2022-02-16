@@ -9,12 +9,6 @@ public interface StingrayTestClient {
 
     StingrayTestClient useAuthorization(String authorization);
 
-    FakeApplicationAuthorizationBuilder useFakeApplicationAuth();
-
-    StingrayTestClient useFakeApplicationAuth(String applicationId);
-
-    FakeUserAuthorizationBuilder useFakeUserAuth();
-
     StingrayTestClient useHeader(String header, String value);
 
     String getHost();
@@ -54,41 +48,6 @@ public interface StingrayTestClient {
         RequestBuilder authorization(String authorization);
 
         RequestBuilder authorizationBearer(String token);
-
-        FakeApplicationAuthorizationBuilder fakeApplicationAuth();
-
-        RequestBuilder fakeApplicationAuth(String applicationId);
-
-        FakeUserAuthorizationBuilder fakeUserAuth();
-
-        interface FakeApplicationAuthorizationBuilder {
-            FakeApplicationAuthorizationBuilder applicationId(String applicationId);
-
-            FakeApplicationAuthorizationBuilder addTag(String tagName, String tagValue);
-
-            FakeApplicationAuthorizationBuilder addTag(String tagValue);
-
-            FakeApplicationAuthorizationBuilder addAccessGroup(String group);
-
-            RequestBuilder endFakeApplication();
-        }
-
-        interface FakeUserAuthorizationBuilder {
-
-            FakeUserAuthorizationBuilder userId(String userId);
-
-            FakeUserAuthorizationBuilder username(String username);
-
-            FakeUserAuthorizationBuilder usertokenId(String usertokenId);
-
-            FakeUserAuthorizationBuilder customerRef(String customerRef);
-
-            FakeUserAuthorizationBuilder addRole(String name, String value);
-
-            FakeUserAuthorizationBuilder addAccessGroup(String group);
-
-            RequestBuilder endFakeUser();
-        }
 
         RequestBuilder path(String path);
 
@@ -142,35 +101,5 @@ public interface StingrayTestClient {
         }
 
         StingrayResponseHelper execute();
-    }
-
-    interface FakeApplicationAuthorizationBuilder {
-
-        FakeApplicationAuthorizationBuilder applicationId(String applicationId);
-
-        FakeApplicationAuthorizationBuilder addTag(String tagName, String tagValue);
-
-        FakeApplicationAuthorizationBuilder addTag(String tagValue);
-
-        FakeApplicationAuthorizationBuilder addAccessGroup(String group);
-
-        StingrayTestClient endFakeApplication();
-    }
-
-    interface FakeUserAuthorizationBuilder {
-
-        FakeUserAuthorizationBuilder userId(String userId);
-
-        FakeUserAuthorizationBuilder username(String username);
-
-        FakeUserAuthorizationBuilder usertokenId(String usertokenId);
-
-        FakeUserAuthorizationBuilder customerRef(String customerRef);
-
-        FakeUserAuthorizationBuilder addRole(String name, String value);
-
-        FakeUserAuthorizationBuilder addAccessGroup(String group);
-
-        StingrayTestClient endFakeUser();
     }
 }

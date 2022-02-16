@@ -2,7 +2,6 @@ package no.cantara.stingray.application.health;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import no.cantara.stingray.application.security.StingraySecurityOverride;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +27,6 @@ public class StingrayHealthResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @StingraySecurityOverride(logAccess = false) // disable authorization requirement in security-filter and do not trace-log access to this endpoint
     public Response getHealth() {
         try {
             String currentHealthJsonWithoutTimestamp = healthService.getCurrentHealthJson();

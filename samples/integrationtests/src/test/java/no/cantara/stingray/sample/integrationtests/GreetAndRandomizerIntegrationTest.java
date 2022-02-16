@@ -10,6 +10,7 @@ import no.cantara.stingray.sample.greeter.DefaultGreetingCandidateRepository;
 import no.cantara.stingray.sample.greeter.Greeting;
 import no.cantara.stingray.sample.greeter.GreetingCandidateRepository;
 import no.cantara.stingray.sample.greeter.GreetingService;
+import no.cantara.stingray.security.authentication.test.FakeStingrayAuthorization;
 import no.cantara.stingray.test.StingrayApplicationProvider;
 import no.cantara.stingray.test.StingrayBeforeInitLifecycleListener;
 import no.cantara.stingray.test.StingrayConfigOverride;
@@ -94,7 +95,10 @@ public class GreetAndRandomizerIntegrationTest implements StingrayBeforeInitLife
     @Test
     public void thatGreetingRestAPICanUseRandomizerToPickGreeting() {
         for (int i = 0; i < 10; i++) {
-            Greeting greeting = greeterClient.get().path("/greet/John").fakeApplicationAuth("inttest-viewer").execute()
+            Greeting greeting = greeterClient.get()
+                    .path("/greet/John")
+                    .authorization(FakeStingrayAuthorization.application().applicationId("inttest-viewer").build())
+                    .execute()
                     .expect200Ok().contentAsType(Greeting.class);
             log.info("/greet/John Response: {}", greeting);
             assertTrue(greeting.getGreeting().startsWith("Mock-")); // assert that mocks are used

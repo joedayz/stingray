@@ -19,22 +19,14 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
-import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Application;
-import jakarta.ws.rs.core.Request;
 import no.cantara.config.ApplicationProperties;
-import no.cantara.config.ProviderLoader;
+import no.cantara.stingray.application.cors.StingrayCORSServletFilter;
 import no.cantara.stingray.application.health.StingrayHealthResource;
 import no.cantara.stingray.application.health.StingrayHealthService;
 import no.cantara.stingray.application.metrics.StingrayMetrics;
 import no.cantara.stingray.application.openapi.StingrayOpenApiResource;
 import no.cantara.stingray.application.openapi.StingrayOpenApiSpecFilter;
-import no.cantara.stingray.application.security.StingrayCORSServletFilter;
-import no.cantara.stingray.application.security.StingraySecurityFilter;
-import no.cantara.stingray.security.authentication.StingrayAuthenticationManager;
-import no.cantara.stingray.security.authentication.StingrayAuthenticationManagerFactory;
-import no.cantara.stingray.security.authorization.StingrayAccessManager;
-import no.cantara.stingray.security.authorization.StingrayAccessManagerFactory;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -44,15 +36,12 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
@@ -93,6 +82,11 @@ public abstract class AbstractStingrayApplication<A extends AbstractStingrayAppl
         resourceConfig = new ResourceConfig();
         put(Application.class, resourceConfig);
         put(ResourceConfig.class, resourceConfig);
+    }
+
+    @Override
+    public String contextPath() {
+        return config.get("server.context-path");
     }
 
     @Override
@@ -340,7 +334,6 @@ public abstract class AbstractStingrayApplication<A extends AbstractStingrayAppl
         stingrayMetrics.initAllMetrics();
         initVisualeHealth();
         initAdminServlet();
-        initSecurity();
         initAndAddServletFilter(StingrayDefaultExceptionServletFilter.class, StingrayDefaultExceptionServletFilter::new, "/*", EnumSet.allOf(DispatcherType.class));
         initAndAddServletFilter(StingrayCORSServletFilter.class, StingrayCORSServletFilter.builder()::build, "/*", EnumSet.allOf(DispatcherType.class));
         initAndRegisterJaxRsWsComponent(StingrayOpenApiResource.class.getName(), this::createOpenApiResource);
@@ -416,47 +409,6 @@ public abstract class AbstractStingrayApplication<A extends AbstractStingrayAppl
 
     protected void initAdminServlet() {
         init(AdminServlet.class, AdminServlet::new);
-    }
-
-    protected void initSecurity() {
-        init(StingrayAuthenticationManager.class, this::createAuthenticationManager);
-        init(StingrayAccessManager.class, this::createAccessManager);
-        initAndRegisterJaxRsWsComponent(StingraySecurityFilter.class, this::createSecurityFilter);
-    }
-
-    protected StingrayAuthenticationManager createAuthenticationManager() {
-        String provider = config.get("authentication.provider", "default");
-        StingrayAuthenticationManager authenticationManager = ProviderLoader.configure(config, provider, StingrayAuthenticationManagerFactory.class);
-        return authenticationManager;
-    }
-
-    protected StingrayAccessManager createAccessManager() {
-        ApplicationProperties authConfig = ApplicationProperties.builder()
-                .classpathPropertiesFile(applicationAlias + "/service-authorization.properties")
-                .classpathPropertiesFile(applicationAlias + "/authorization.properties")
-                .classpathPropertiesFile(applicationAlias + "-authorization.properties")
-                .classpathPropertiesFile("authorization-" + applicationAlias + ".properties")
-                .filesystemPropertiesFile("authorization.properties")
-                .filesystemPropertiesFile(applicationAlias + "-authorization.properties")
-                .filesystemPropertiesFile("authorization-" + applicationAlias + ".properties")
-                .build();
-        String provider = config.get("authorization.provider", "default");
-        StingrayAccessManager accessManager = ProviderLoader.configure(authConfig, provider, StingrayAccessManagerFactory.class);
-        return accessManager;
-    }
-
-    protected StingraySecurityFilter createSecurityFilter() {
-        StingrayAuthenticationManager authenticationManager = get(StingrayAuthenticationManager.class);
-        StingrayAccessManager accessManager = get(StingrayAccessManager.class);
-        return new StingraySecurityFilter(authenticationManager, accessManager, this::getJaxRsRoutingEndpoint);
-    }
-
-    protected Method getJaxRsRoutingEndpoint(ContainerRequestContext requestContext) {
-        Request request = requestContext.getRequest();
-        ContainerRequest containerRequest = (ContainerRequest) request;
-        RoutingContext routingContext = (RoutingContext) containerRequest.getUriInfo();
-        Method resourceMethod = routingContext.getResourceMethod();
-        return resourceMethod;
     }
 
     public static String readMetaInfMavenPomVersion(String groupId, String artifactId) {

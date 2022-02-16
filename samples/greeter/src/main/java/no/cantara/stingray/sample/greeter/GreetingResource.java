@@ -13,8 +13,8 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import no.cantara.stingray.application.security.StingrayAction;
-import no.cantara.stingray.application.security.StingrayPrincipal;
+import no.cantara.stingray.security.application.StingrayAction;
+import no.cantara.stingray.security.application.StingrayPrincipal;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;

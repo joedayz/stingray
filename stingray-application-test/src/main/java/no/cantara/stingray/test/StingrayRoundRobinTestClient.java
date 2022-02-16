@@ -34,19 +34,6 @@ public class StingrayRoundRobinTestClient implements StingrayTestClient {
         return select().useAuthorization(authorization);
     }
 
-    @Override
-    public FakeApplicationAuthorizationBuilder useFakeApplicationAuth() {
-        return select().useFakeApplicationAuth();
-    }
-
-    public StingrayTestClient useFakeApplicationAuth(String applicationId) {
-        return select().useFakeApplicationAuth(applicationId);
-    }
-
-    public FakeUserAuthorizationBuilder useFakeUserAuth() {
-        return select().useFakeUserAuth();
-    }
-
     public StingrayTestClient useHeader(String header, String value) {
         return select().useHeader(header, value);
     }

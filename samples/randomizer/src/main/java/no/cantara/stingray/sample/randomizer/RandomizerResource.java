@@ -8,7 +8,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import no.cantara.stingray.application.security.StingrayAction;
+import no.cantara.stingray.security.application.StingrayAction;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;

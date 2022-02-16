@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry;
 import no.cantara.config.ApplicationProperties;
 import no.cantara.stingray.application.AbstractStingrayApplication;
 import no.cantara.stingray.application.health.StingrayHealthService;
+import no.cantara.stingray.security.StingraySecurity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,7 @@ public class GreeterApplication extends AbstractStingrayApplication<GreeterAppli
     @Override
     public void doInit() {
         initBuiltinDefaults();
+        StingraySecurity.initSecurity(this);
         init(GreetingCandidateRepository.class, this::createGreetingCandidateRepository);
         init(RandomizerClient.class, this::createHttpRandomizer);
         init(GreetingService.class, this::createGreetingService);

@@ -12,7 +12,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
-import no.cantara.stingray.application.security.StingraySecurityOverride;
 
 @Path("/openapi.{type:json|yaml}")
 public class StingrayOpenApiResource extends BaseOpenApiResource {
@@ -27,7 +26,6 @@ public class StingrayOpenApiResource extends BaseOpenApiResource {
     @GET
     @Produces({"application/json", "application/yaml"})
     @Operation(hidden = true)
-    @StingraySecurityOverride
     public Response getOpenApi(@Context HttpHeaders headers, @Context UriInfo uriInfo, @PathParam("type") String type) throws Exception {
         return super.getOpenApi(headers, this.config, this.app, uriInfo, type);
     }

@@ -1,14 +1,17 @@
-package no.cantara.stingray.application.security;
+package no.cantara.stingray.application.cors;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpFilter;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class StingrayCORSServletFilter extends HttpFilter {
+public class StingrayCORSServletFilter implements Filter {
 
     private final String origin;
     private final String credentials;
@@ -23,12 +26,22 @@ public class StingrayCORSServletFilter extends HttpFilter {
     }
 
     @Override
-    protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void init(FilterConfig filterConfig) throws ServletException {
+    }
+
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) res;
         response.addHeader("Access-Control-Allow-Origin", origin);
         response.addHeader("Access-Control-Allow-Credentials", credentials);
         response.addHeader("Access-Control-Allow-Headers", headers);
         response.addHeader("Access-Control-Allow-Methods", methods);
         chain.doFilter(request, response);
+    }
+
+    @Override
+    public void destroy() {
     }
 
     public static Builder builder() {

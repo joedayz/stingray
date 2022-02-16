@@ -1,4 +1,4 @@
-package no.cantara.stingray.application.security;
+package no.cantara.stingray.security.application;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
