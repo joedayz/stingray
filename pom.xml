@@ -2,14 +2,14 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>no.cantara.jaxrsapp</groupId>
-    <artifactId>jaxrsapplication-project</artifactId>
-    <version>0.20.2-SNAPSHOT</version>
+    <groupId>no.cantara.stingray</groupId>
+    <artifactId>stingray-project</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>JaxRsApplication-Project</name>
-    <description>JaxRsApplication-Project</description>
-    <url>https://github.com/Cantara/jaxrsapplication</url>
+    <name>Stingray-Project</name>
+    <description>Stingray-Project</description>
+    <url>https://github.com/Cantara/stingray</url>
     <inceptionYear>2021</inceptionYear>
 
     <properties>
@@ -35,23 +35,23 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/Cantara/jaxrsapplication.git</connection>
-        <developerConnection>scm:git:git@github.com:Cantara/jaxrsapplication.git</developerConnection>
-        <url>https://github.com/Cantara/jaxrsapplication/tree/master</url>
+        <connection>scm:git:git://github.com/Cantara/stingray.git</connection>
+        <developerConnection>scm:git:git@github.com:Cantara/stingray.git</developerConnection>
+        <url>https://github.com/Cantara/stingray/tree/master</url>
         <tag>HEAD</tag>
     </scm>
 
     <modules>
-        <module>jaxrsapplication-parent-jdk8</module>
-        <module>jaxrsapplication-jdk8</module>
-        <module>jaxrsapplication-test-jdk8</module>
-        <module>jaxrsapplication-parent</module>
-        <module>jaxrsapplication</module>
-        <module>jaxrsapplication-test</module>
-        <module>jaxrssecurity</module>
-        <module>jaxrssecurity-test</module>
-        <module>jaxrssql</module>
-        <module>jaxrssql-embedded-postgres</module>
+        <module>stingray-parent-jdk8</module>
+        <module>stingray-application-jdk8</module>
+        <module>stingray-application-test-jdk8</module>
+        <module>stingray-parent</module>
+        <module>stingray-application</module>
+        <module>stingray-application-test</module>
+        <module>stingray-security</module>
+        <module>stingray-security-test</module>
+        <module>stingray-sql</module>
+        <module>stingray-sql-test</module>
         <module>samples</module>
     </modules>
 

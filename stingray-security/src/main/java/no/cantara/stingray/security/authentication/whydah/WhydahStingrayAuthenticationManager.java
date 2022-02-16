@@ -1,0 +1,250 @@
+package no.cantara.stingray.security.authentication.whydah;
+
+import com.auth0.jwk.JwkException;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import net.whydah.sso.user.mappers.UserTokenMapper;
+import net.whydah.sso.user.types.UserApplicationRoleEntry;
+import net.whydah.sso.user.types.UserToken;
+import no.cantara.stingray.security.authentication.DefaultStingrayApplicationAuthentication;
+import no.cantara.stingray.security.authentication.DefaultStingrayAuthenticationResult;
+import no.cantara.stingray.security.authentication.StingrayApplicationAuthentication;
+import no.cantara.stingray.security.authentication.StingrayApplicationTag;
+import no.cantara.stingray.security.authentication.StingrayApplicationTokenSession;
+import no.cantara.stingray.security.authentication.StingrayAuthenticationManager;
+import no.cantara.stingray.security.authentication.StingrayAuthenticationResult;
+import no.cantara.stingray.security.authentication.StingrayCantaraUserAuthentication;
+import no.cantara.stingray.security.authentication.StingrayUserAuthentication;
+import no.cantara.stingray.security.authentication.UnauthorizedStingrayException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+public class WhydahStingrayAuthenticationManager implements StingrayAuthenticationManager {
+
+    private static final Logger log = LoggerFactory.getLogger(WhydahStingrayAuthenticationManager.class);
+    private static Pattern appTokenIdPattern = Pattern.compile("<applicationtokenID>([^<]*)</applicationtokenID>");
+
+    private final String oauth2Uri;
+    private final StingrayApplicationTokenSession applicationTokenSession;
+    private final StingrayWhydahService whydahService;
+    private final String whydahAuthGroupUserRoleNameFix;
+    private final String whydahAuthGroupApplicationTagName;
+
+    public WhydahStingrayAuthenticationManager(String oauth2Uri, StingrayApplicationTokenSession applicationTokenSession, StingrayWhydahService whydahService, String whydahAuthGroupUserRoleNameFix, String whydahAuthGroupApplicationTagName) {
+        this.oauth2Uri = oauth2Uri;
+        this.applicationTokenSession = applicationTokenSession;
+        this.whydahService = whydahService;
+        this.whydahAuthGroupUserRoleNameFix = whydahAuthGroupUserRoleNameFix;
+        this.whydahAuthGroupApplicationTagName = whydahAuthGroupApplicationTagName;
+    }
+
+    public StingrayWhydahService getWhydahService() {
+        return whydahService;
+    }
+
+    public String getWhydahAuthGroupUserRoleNameFix() {
+        return whydahAuthGroupUserRoleNameFix;
+    }
+
+    public String getWhydahAuthGroupApplicationTagName() {
+        return whydahAuthGroupApplicationTagName;
+    }
+
+    @Override
+    public StingrayUserAuthentication authenticateAsUser(final String authorizationHeader) throws UnauthorizedStingrayException {
+        String authorization = authorizationHeader;
+        if (authorization == null || authorization.isEmpty()) {
+            throw new UnauthorizedStingrayException();
+        }
+        String usertokenid;
+        String token = authorization.substring("Bearer ".length());
+        String ssoId;
+        String customerRef;
+        Supplier<String> forwardingTokenGenerator = () -> token; // forwarding incoming token by default
+        Supplier<Map<String, String>> rolesGenerator;
+        if (token.length() > 50) {
+            log.trace("Suspected JWT-token is {}", token);
+        } else {
+            log.trace("Suspected whydah-userticket is {}", token);
+        }
+        DecodedJWT decodedJWT = null;
+        try {
+            decodedJWT = JWT.decode(token);
+            log.trace("token is a JWT token: {}", token);
+        } catch (JWTDecodeException e) {
+            log.trace("token is not a JWT token: {}", token);
+        }
+        if (decodedJWT != null) {
+            try {
+                log.debug("Resolving JWT-token");
+                StingrayJwtHelper jwtUtils = new StingrayJwtHelper(oauth2Uri, token);
+                ssoId = jwtUtils.getUserNameFromJwtToken();
+                customerRef = jwtUtils.getCustomerRefFromJwtToken();
+                usertokenid = jwtUtils.getUserTokenFromJwtToken();
+                final String theUserTokenId = usertokenid;
+                rolesGenerator = () -> {
+                    UserToken userToken = whydahService.findUserTokenFromUserTokenId(theUserTokenId);
+                    if (userToken == null) {
+                        return Collections.emptyMap();
+                    }
+                    Map<String, String> roleValueByName = userToken.getRoleList()
+                            .stream()
+                            .collect(Collectors.toMap(UserApplicationRoleEntry::getRoleName, UserApplicationRoleEntry::getRoleValue));
+                    return roleValueByName;
+                };
+                log.trace("Resolved JWT-token. Found customerRef {} and usertokenid {}", customerRef, usertokenid);
+            } catch (JwkException e) {
+                log.warn("Token {} throws JwkException during authentication {} ", token, e);
+                throw new UnauthorizedStingrayException();
+            }
+        } else {
+            try {
+                log.debug("Resolving Whydah-userticket");
+                String userticket = token;
+                final String userTokenFromUserTokenId = whydahService.getUserTokenByUserTicket(userticket);
+                if (userTokenFromUserTokenId != null && UserTokenMapper.validateUserTokenMD5Signature(userTokenFromUserTokenId)) {
+                    final UserToken userToken = UserTokenMapper.fromUserTokenXml(userTokenFromUserTokenId);
+                    usertokenid = userToken.getUserTokenId();
+                    ssoId = userToken.getUid();
+                    customerRef = userToken.getPersonRef();
+                    final String theUserTokenId = usertokenid;
+                    final String theSsoId = ssoId;
+                    final String theCustomerRef = customerRef;
+                    forwardingTokenGenerator = () -> {
+                        String forwardingUserTicket = whydahService.createTicketForUserTokenID(theUserTokenId);
+                        if (forwardingUserTicket == null) {
+                            throw new RuntimeException(String.format("Unable to generate user-ticket for user. ssoId=%s, customerRef=%s", theSsoId, theCustomerRef));
+                        }
+                        return forwardingUserTicket;
+                    };
+                    rolesGenerator = () -> {
+                        Map<String, String> roleValueByName = userToken.getRoleList()
+                                .stream()
+                                .collect(Collectors.toMap(UserApplicationRoleEntry::getRoleName, UserApplicationRoleEntry::getRoleValue));
+                        return roleValueByName;
+                    };
+                    log.debug("Resolved Whydah-userticket. Found customerRef {} and usertokenid {}", customerRef, usertokenid);
+                } else {
+                    log.debug("Unresolved Whydah-userticket! Got usertoken {}", userTokenFromUserTokenId);
+                    throw new UnauthorizedStingrayException();
+                }
+            } catch (Exception ex) {
+                log.debug("Exception", ex);
+                if (ex instanceof UnauthorizedStingrayException) {
+                    throw ex;
+                }
+                log.info("Token {} throws Exception during whydah-authentication {} ", token, ex);
+                throw new UnauthorizedStingrayException();
+            }
+        }
+
+        if (usertokenid == null || usertokenid.isEmpty()) {
+            log.debug("Usertoken is null or empty");
+            throw new UnauthorizedStingrayException();
+        }
+
+        boolean okUserSession = whydahService.validateUserTokenId(usertokenid);
+
+        if (ssoId == null || ssoId.isEmpty()) {
+            log.debug("Unsucessful resolving of user-authentication, ssoId is null or empty. ssoid '{}'", ssoId);
+            throw new UnauthorizedStingrayException();
+        }
+        if (customerRef == null || customerRef.isEmpty()) {
+            log.debug("Unsucessful resolving of user-authentication, customerRef is null or empty. customerRef {}", customerRef);
+            throw new UnauthorizedStingrayException();
+        }
+        if (!okUserSession) {
+            log.debug("Unsucessful resolving of user-authentication, okUserSession false.");
+            throw new UnauthorizedStingrayException();
+        }
+        log.debug("Successful user authentication");
+
+        return new StingrayCantaraUserAuthentication(ssoId, ssoId, usertokenid, customerRef, forwardingTokenGenerator, rolesGenerator, whydahAuthGroupUserRoleNameFix);
+    }
+
+
+    @Override
+    public StingrayApplicationAuthentication authenticateAsApplication(final String authorizationHeader) throws
+            UnauthorizedStingrayException {
+        String authorization = authorizationHeader;
+        if (authorization == null || authorization.isEmpty()) {
+            return null;
+        }
+        try {
+            String token = authorization.substring("Bearer ".length());
+
+            if (token.contains("<applicationtoken>")) {
+                // assume that bearer token is application-token xml, extract the application-token-id from it
+                Matcher m = appTokenIdPattern.matcher(token);
+                if (m.find()) {
+                    String applicationTokenId = m.group(1);
+                    // Use only the application-token-id from the xml, we cannot trust anything else unless it was signed
+                    final String applicationId = whydahService.getApplicationIdFromApplicationTokenId(applicationTokenId);
+                    log.trace("Lookup application by applicationTokenId {}. Id found {}", token, applicationId);
+                    if (applicationId != null) {
+                        return new DefaultStingrayApplicationAuthentication(applicationId, applicationTokenId, () -> {
+                            List<StingrayApplicationTag> tags = whydahService.getApplicationTagsFromApplicationTokenId(applicationTokenId);
+                            return tags;
+                        }, whydahAuthGroupApplicationTagName);
+                    }
+                } else {
+                    log.warn("Invalid application-token XML sent as bearer token. This is not a supported authentication mechanism. Token: {}", token);
+                }
+            } else {
+                // assume that bearer token is application-token-id
+                final String applicationId = whydahService.getApplicationIdFromApplicationTokenId(token);
+                log.trace("Lookup application by applicationTokenId {}. Id found {}", token, applicationId);
+                if (applicationId != null) {
+                    return new DefaultStingrayApplicationAuthentication(applicationId, token, () -> {
+                        List<StingrayApplicationTag> tags = whydahService.getApplicationTagsFromApplicationTokenId(token);
+                        return tags;
+                    }, whydahAuthGroupApplicationTagName);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Exception in attempt to resolve authorization, bearerToken: " + authorizationHeader, e);
+        }
+        return null;
+    }
+
+    @Override
+    public StingrayAuthenticationResult authenticate(String authorizationHeader) {
+        String authorization = authorizationHeader;
+        if (authorization == null || authorization.isEmpty() || authorization.length() < 39) {
+            return new DefaultStingrayAuthenticationResult(null);
+        }
+        String token = authorization.substring("Bearer ".length());
+
+        if (token.contains("<applicationtoken>") || token.length() < 33) {
+            try {
+                StingrayApplicationAuthentication applicationAuthentication = authenticateAsApplication(authorization);
+                return new DefaultStingrayAuthenticationResult(applicationAuthentication);
+            } catch (UnauthorizedStingrayException e) {
+                return new DefaultStingrayAuthenticationResult(null);
+            }
+        }
+
+        //Assume jwt or whydah token
+        try {
+            StingrayUserAuthentication userAuthentication = authenticateAsUser(authorization);
+            return new DefaultStingrayAuthenticationResult(userAuthentication);
+        } catch (UnauthorizedStingrayException e) {
+            return new DefaultStingrayAuthenticationResult(null);
+        }
+    }
+
+    @Override
+    public StingrayApplicationTokenSession getApplicationTokenSession() {
+        return applicationTokenSession;
+    }
+}
+

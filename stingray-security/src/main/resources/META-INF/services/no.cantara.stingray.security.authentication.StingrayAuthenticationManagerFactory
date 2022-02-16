@@ -1,0 +1,2 @@
+no.cantara.stingray.security.authentication.DefaultStingrayAuthenticationManagerFactory
+no.cantara.stingray.security.authentication.whydah.WhydahStingrayAuthenticationManagerFactory

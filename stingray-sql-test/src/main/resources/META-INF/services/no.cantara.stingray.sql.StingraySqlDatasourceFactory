@@ -1,0 +1,2 @@
+no.cantara.stingray.sql.test.embedded.EmbeddedPostgresStingraySqlDatasourceFactory
+no.cantara.stingray.sql.test.discard.DiscardingStingraySqlDatasourceFactory

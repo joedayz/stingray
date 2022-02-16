@@ -3,17 +3,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>no.cantara.jaxrsapp</groupId>
-        <artifactId>jaxrsapplication-project</artifactId>
-        <version>0.20.2-SNAPSHOT</version>
+        <groupId>no.cantara.stingray</groupId>
+        <artifactId>stingray-project</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>samples</artifactId>
-    <version>0.20.2-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>JaxRsApplication-Samples</name>
-    <description>JaxRsApplication-Samples</description>
+    <name>Stingray-Samples</name>
+    <description>Stingray-Samples</description>
 
     <properties>
         <module.build.sourceEncoding>UTF-8</module.build.sourceEncoding>

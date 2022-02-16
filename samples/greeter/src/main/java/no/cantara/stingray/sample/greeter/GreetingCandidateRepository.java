@@ -1,0 +1,10 @@
+package no.cantara.stingray.sample.greeter;
+
+import java.util.List;
+
+public interface GreetingCandidateRepository {
+
+    List<GreetingCandidate> greetingCandidates();
+
+    void addCandidate(GreetingCandidate candidate);
+}

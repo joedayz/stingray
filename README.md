@@ -1,5 +1,5 @@
-# jaxrsapplication
-Application framework based on Servlets, Jetty, JaxRsWs, Jersey
+# Stingray
+Application framework based on Servlets, Jetty, Javax/Jakarta RsWs, Jersey
 
 # Dropwizard Metrics
 

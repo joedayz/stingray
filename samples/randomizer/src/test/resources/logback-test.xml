@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="no.cantara.jaxrsapp" level="trace"></logger>
+    <logger name="no.cantara.stingray" level="trace"></logger>
     <logger name="no.cantara" level="trace"></logger>
     <logger name="org.eclipse.jetty" level="info"></logger>
 

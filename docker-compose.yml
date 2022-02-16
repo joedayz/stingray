@@ -24,4 +24,4 @@ volumes:
 
 networks:
   default:
-    name: jaxrsapplication_test_network
+    name: stingray_test_network
