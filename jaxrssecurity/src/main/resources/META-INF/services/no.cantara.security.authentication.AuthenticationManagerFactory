@@ -1,0 +1,2 @@
+no.cantara.security.authentication.DefaultAuthenticationManagerFactory
+no.cantara.security.authentication.whydah.WhydahAuthenticationManagerFactory
