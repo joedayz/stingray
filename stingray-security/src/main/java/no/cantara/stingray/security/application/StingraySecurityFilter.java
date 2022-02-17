@@ -54,6 +54,10 @@ public class StingraySecurityFilter implements ContainerRequestFilter {
             }
             return; // access granted, no authentication or access-check needed
         }
+        if (securityOverriddenResources.contains(resourceMethod.getDeclaringClass())) {
+            log.trace("Access granted through default security-override to resource: {} /{}", requestContext.getMethod(), requestContext.getUriInfo().getPath());
+            return; // access always granted to resource classes that are configured in the security-overridden set
+        }
         String authorizationHeader = requestContext.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         StingrayAuthenticationResult authenticationResult = authenticationManager.authenticate(authorizationHeader);
         if (!authenticationResult.isValid()) {
@@ -66,14 +70,10 @@ public class StingraySecurityFilter implements ContainerRequestFilter {
         requestContext.setProperty(StingrayAuthentication.class.getName(), authentication);
         StingrayAction secureAction = resourceMethod.getDeclaredAnnotation(StingrayAction.class);
         if (secureAction == null) {
-            if (securityOverriddenResources.contains(resourceMethod.getDeclaringClass())) {
-                return; // access always granted to resource classes that are configured in the security-overridden set
-            } else {
-                // forbid access to endpoint without secure-action annotation, i.e. secure-by-default
-                log.trace("Access forbidden (403) due to missing @SecureAction annotation on {}.{}() to: {} /{}", resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), requestContext.getUriInfo().getPath());
-                requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
-                return;
-            }
+            // forbid access to endpoint without secure-action annotation, i.e. secure-by-default
+            log.trace("Access forbidden (403) due to missing @SecureAction annotation on {}.{}() to: {} /{}", resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), requestContext.getUriInfo().getPath());
+            requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
+            return;
         }
         String action = secureAction.value();
         boolean hasAccess = accessManager.hasAccess(authentication, action);
