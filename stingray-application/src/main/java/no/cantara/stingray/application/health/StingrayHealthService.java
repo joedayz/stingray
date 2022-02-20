@@ -89,6 +89,7 @@ public class StingrayHealthService implements Runnable {
                 currentHealth.put("version", version);
                 currentHealth.put("ip", ip);
                 currentHealth.put("running since", timeAtStart);
+                // TODO add service-name / alias / context-path and some other basic info/config about app
                 currentHealthSerialized.set(currentHealth.toPrettyString());
             } catch (Throwable t) {
                 log.warn("While setting health initialization message", t);

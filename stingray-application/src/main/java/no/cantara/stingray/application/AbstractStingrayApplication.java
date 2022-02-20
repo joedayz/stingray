@@ -336,7 +336,7 @@ public abstract class AbstractStingrayApplication<A extends AbstractStingrayAppl
         initAdminServlet();
         initAndAddServletFilter(StingrayDefaultExceptionServletFilter.class, StingrayDefaultExceptionServletFilter::new, "/*", EnumSet.allOf(DispatcherType.class));
         initAndAddServletFilter(StingrayCORSServletFilter.class, StingrayCORSServletFilter.builder()::build, "/*", EnumSet.allOf(DispatcherType.class));
-        initAndRegisterJaxRsWsComponent(StingrayOpenApiResource.class.getName(), this::createOpenApiResource);
+        initAndRegisterJaxRsWsComponent(StingrayOpenApiResource.class, this::createOpenApiResource);
         StingrayHealthService healthService = get(StingrayHealthService.class);
         healthService.registerHealthCheck("webserver.running", new HealthCheck() {
             @Override

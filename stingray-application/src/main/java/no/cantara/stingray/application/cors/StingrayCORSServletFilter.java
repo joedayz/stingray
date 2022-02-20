@@ -14,12 +14,14 @@ public class StingrayCORSServletFilter extends HttpFilter {
     private final String credentials;
     private final String headers;
     private final String methods;
+    private final String maxAge;
 
-    private StingrayCORSServletFilter(String origin, String credentials, String headers, String methods) {
+    private StingrayCORSServletFilter(String origin, String credentials, String headers, String methods, String maxAge) {
         this.origin = origin;
         this.credentials = credentials;
         this.headers = headers;
         this.methods = methods;
+        this.maxAge = maxAge;
     }
 
     @Override
@@ -28,6 +30,7 @@ public class StingrayCORSServletFilter extends HttpFilter {
         response.addHeader("Access-Control-Allow-Credentials", credentials);
         response.addHeader("Access-Control-Allow-Headers", headers);
         response.addHeader("Access-Control-Allow-Methods", methods);
+        response.addHeader("Access-Control-Max-Age", maxAge);
         chain.doFilter(request, response);
     }
 
@@ -41,6 +44,7 @@ public class StingrayCORSServletFilter extends HttpFilter {
         private String credentials = "true";
         private String headers = "origin, content-type, accept, authorization";
         private String methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD";
+        private String maxAge = "86400";
 
         private Builder() {
         }
@@ -65,8 +69,13 @@ public class StingrayCORSServletFilter extends HttpFilter {
             return this;
         }
 
+        public Builder maxAge(String maxAge) {
+            this.maxAge = maxAge;
+            return this;
+        }
+
         public StingrayCORSServletFilter build() {
-            return new StingrayCORSServletFilter(origin, credentials, headers, methods);
+            return new StingrayCORSServletFilter(origin, credentials, headers, methods, maxAge);
         }
     }
 }

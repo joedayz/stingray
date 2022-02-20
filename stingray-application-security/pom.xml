@@ -8,7 +8,7 @@
         <version>1.2.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>stingray-security</artifactId>
+    <artifactId>stingray-application-security</artifactId>
     <version>1.2.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -21,36 +21,18 @@
 
     <dependencies>
         <dependency>
-            <groupId>no.cantara.config</groupId>
-            <artifactId>property-config</artifactId>
+            <groupId>no.cantara.stingray</groupId>
+            <artifactId>stingray-application</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>net.whydah.sso</groupId>
-            <artifactId>Whydah-Java-SDK</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>jwks-rsa</artifactId>
+            <groupId>no.cantara.stingray</groupId>
+            <artifactId>stingray-security</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.10</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.skyscreamer</groupId>
-            <artifactId>jsonassert</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -72,8 +54,9 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.10.0</version>
                     <configuration>
-                        <target>1.8</target>
-                        <source>1.8</source>
+                        <release>11</release>
+                        <target>11</target>
+                        <source>11</source>
                         <encoding>${module.build.sourceEncoding}</encoding>
                         <meminitial>64m</meminitial>
                         <maxmem>512m</maxmem>

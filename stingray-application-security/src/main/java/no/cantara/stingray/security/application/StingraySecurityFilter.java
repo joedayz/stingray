@@ -4,8 +4,6 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
-import no.cantara.stingray.application.health.StingrayHealthResource;
-import no.cantara.stingray.application.openapi.StingrayOpenApiResource;
 import no.cantara.stingray.security.authentication.StingrayAuthentication;
 import no.cantara.stingray.security.authentication.StingrayAuthenticationManager;
 import no.cantara.stingray.security.authentication.StingrayAuthenticationResult;
@@ -23,12 +21,13 @@ import java.util.function.Function;
 public class StingraySecurityFilter implements ContainerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(StingraySecurityFilter.class);
-    private static final Set<Class<?>> securityOverriddenResources;
+    private static final Set<String> securityOverriddenPaths;
 
     static {
-        securityOverriddenResources = new LinkedHashSet<>();
-        securityOverriddenResources.add(StingrayHealthResource.class);
-        securityOverriddenResources.add(StingrayOpenApiResource.class);
+        securityOverriddenPaths = new LinkedHashSet<>();
+        securityOverriddenPaths.add("health");
+        securityOverriddenPaths.add("openapi.yaml");
+        securityOverriddenPaths.add("openapi.json");
     }
 
     private final StingrayAuthenticationManager authenticationManager;
@@ -54,7 +53,8 @@ public class StingraySecurityFilter implements ContainerRequestFilter {
             }
             return; // access granted, no authentication or access-check needed
         }
-        if (securityOverriddenResources.contains(resourceMethod.getDeclaringClass())) {
+        final String path = requestContext.getUriInfo().getPath();
+        if (securityOverriddenPaths.contains(path)) {
             log.trace("Access granted through default security-override to resource: {} /{}", requestContext.getMethod(), requestContext.getUriInfo().getPath());
             return; // access always granted to resource classes that are configured in the security-overridden set
         }
