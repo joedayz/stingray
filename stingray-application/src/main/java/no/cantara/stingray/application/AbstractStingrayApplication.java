@@ -330,6 +330,7 @@ public abstract class AbstractStingrayApplication<A extends AbstractStingrayAppl
     }
 
     protected void initBuiltinDefaults() {
+        initAndRegisterJaxRsWsComponent("jackson", this::createStingrayJacksonMapperProvider);
         StingrayMetrics stingrayMetrics = new StingrayMetrics(this);
         stingrayMetrics.initAllMetrics();
         initVisualeHealth();
@@ -348,6 +349,10 @@ public abstract class AbstractStingrayApplication<A extends AbstractStingrayAppl
                 }
             }
         });
+    }
+
+    private StingrayJacksonMapperProvider createStingrayJacksonMapperProvider() {
+        return new StingrayJacksonMapperProvider();
     }
 
     protected StingrayOpenApiResource createOpenApiResource() {
