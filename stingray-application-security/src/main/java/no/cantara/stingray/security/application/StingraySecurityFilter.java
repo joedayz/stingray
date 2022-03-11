@@ -71,7 +71,7 @@ public class StingraySecurityFilter implements ContainerRequestFilter {
         StingrayAction secureAction = resourceMethod.getDeclaredAnnotation(StingrayAction.class);
         if (secureAction == null) {
             // forbid access to endpoint without secure-action annotation, i.e. secure-by-default
-            log.trace("Access forbidden (403) due to missing @SecureAction annotation on {}.{}() to: {} /{}", resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), requestContext.getUriInfo().getPath());
+            log.trace("Access forbidden (403) due to missing @StingrayAction annotation on {}.{}() to: {} /{}", resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), requestContext.getUriInfo().getPath());
             requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
             return;
         }
