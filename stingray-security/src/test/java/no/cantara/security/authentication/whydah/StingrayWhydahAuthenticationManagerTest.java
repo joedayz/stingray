@@ -17,6 +17,8 @@ import no.cantara.stingray.security.authentication.whydah.WhydahStingrayAuthenti
 import no.cantara.stingray.security.authentication.whydah.WhydahStingrayAuthenticationManagerFactory;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -101,6 +103,35 @@ public class StingrayWhydahAuthenticationManagerTest {
         assertTrue(groups.contains("pre"));
     }
 
+    @Test
+    public void thatAdditionalFieldsFromUserTokenAreAvailable() {
+        StingrayAuthenticationManager authenticationManager = new WhydahStingrayAuthenticationManager(
+                "", () -> "", new TestWhydahService(), WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_USER_ROLE_NAME_FIX, WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_APPLICATION_TAG_NAME
+        );
+
+        StingrayAuthenticationResult authenticationResult = authenticationManager.authenticate("Bearer " + USERTICKET);
+        assertTrue(authenticationResult.isValid());
+        assertTrue(authenticationResult.isUser());
+        StingrayUserAuthentication userAuthentication = authenticationResult.user().get();
+
+        assertEquals("MyUUIDValue", userAuthentication.ssoId());
+        assertEquals(2, userAuthentication.groups().size());
+        Set<String> groups = new LinkedHashSet<>(userAuthentication.groups());
+        assertTrue(groups.contains("post"));
+        assertTrue(groups.contains("pre"));
+
+        assertEquals("Ola", userAuthentication.firstName());
+        assertEquals("Nordmann", userAuthentication.lastName());
+        assertEquals("Ola Nordmann", userAuthentication.fullName());
+        assertEquals("test@whydah.net", userAuthentication.email());
+        assertEquals("+4712345678", userAuthentication.cellPhone());
+        assertEquals(5, userAuthentication.securityLevel());
+        long estimatedExpiry = Instant.now().plus(3000, ChronoUnit.MILLIS).toEpochMilli();
+        long expiryDelta = Math.abs(estimatedExpiry - userAuthentication.tokenExpiry().toEpochMilli());
+        int expiryEstimationTolerance = 2000; // 2 seconds tolerance
+        assertTrue(expiryDelta < expiryEstimationTolerance); // check that actual expiry within tolerance of estimated expiry
+    }
+
     private class TestWhydahService implements StingrayWhydahService {
         @Override
         public UserToken findUserTokenFromUserTokenId(String userTokenId) {
@@ -113,7 +144,7 @@ public class StingrayWhydahAuthenticationManagerTest {
                 UserToken userToken = new UserToken();
                 userToken.setUid("MyUUIDValue");
                 userToken.setUserName("ola");
-                userToken.setCellPhone("");
+                userToken.setCellPhone("+4712345678");
                 userToken.setSecurityLevel("5");
                 userToken.setNs2link("");
                 userToken.setFirstName("Ola");

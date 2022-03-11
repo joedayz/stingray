@@ -1,6 +1,10 @@
 package no.cantara.stingray.security.authentication;
 
+import net.whydah.sso.user.types.UserToken;
+
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +22,9 @@ public class StingrayCantaraUserAuthentication implements StingrayUserAuthentica
     private final Supplier<Map<String, String>> rolesSupplier;
     private final AtomicReference<Map<String, String>> rolesRef = new AtomicReference<>();
     private final String accessGroupRoleNameFix;
+    private final Supplier<UserToken> lazyUserTokenForAdditionalFieldsSupplier;
 
-    public StingrayCantaraUserAuthentication(String userId, String username, String usertokenId, String customerRefId, Supplier<String> forwardingTokenGenerator, Supplier<Map<String, String>> rolesSupplier, String accessGroupRoleNameFix) {
+    public StingrayCantaraUserAuthentication(String userId, String username, String usertokenId, String customerRefId, Supplier<String> forwardingTokenGenerator, Supplier<Map<String, String>> rolesSupplier, String accessGroupRoleNameFix, Supplier<UserToken> lazyUserTokenForAdditionalFieldsSupplier) {
         this.userId = userId;
         this.username = username;
         this.usertokenId = usertokenId;
@@ -27,6 +32,7 @@ public class StingrayCantaraUserAuthentication implements StingrayUserAuthentica
         this.forwardingTokenGenerator = forwardingTokenGenerator;
         this.rolesSupplier = rolesSupplier;
         this.accessGroupRoleNameFix = accessGroupRoleNameFix;
+        this.lazyUserTokenForAdditionalFieldsSupplier = lazyUserTokenForAdditionalFieldsSupplier;
     }
 
     @Override
@@ -93,5 +99,80 @@ public class StingrayCantaraUserAuthentication implements StingrayUserAuthentica
             rolesRef.set(roles);
         }
         return roles;
+    }
+
+    @Override
+    public String firstName() {
+        UserToken userToken = lazyUserTokenForAdditionalFieldsSupplier.get();
+        if (userToken == null) {
+            return null;
+        }
+        return userToken.getFirstName();
+    }
+
+    @Override
+    public String lastName() {
+        UserToken userToken = lazyUserTokenForAdditionalFieldsSupplier.get();
+        if (userToken == null) {
+            return null;
+        }
+        return userToken.getLastName();
+    }
+
+    @Override
+    public String fullName() {
+        UserToken userToken = lazyUserTokenForAdditionalFieldsSupplier.get();
+        if (userToken == null) {
+            return null;
+        }
+        return userToken.getFirstName() + " " + userToken.getLastName();
+    }
+
+    @Override
+    public String email() {
+        UserToken userToken = lazyUserTokenForAdditionalFieldsSupplier.get();
+        if (userToken == null) {
+            return null;
+        }
+        return userToken.getEmail();
+    }
+
+    @Override
+    public String cellPhone() {
+        UserToken userToken = lazyUserTokenForAdditionalFieldsSupplier.get();
+        if (userToken == null) {
+            return null;
+        }
+        return userToken.getCellPhone();
+    }
+
+    @Override
+    public int securityLevel() {
+        UserToken userToken = lazyUserTokenForAdditionalFieldsSupplier.get();
+        if (userToken == null) {
+            return -1; // unknown security-level
+        }
+        return Integer.parseInt(userToken.getSecurityLevel());
+    }
+
+    @Override
+    public Instant tokenExpiry() {
+        UserToken userToken = lazyUserTokenForAdditionalFieldsSupplier.get();
+        if (userToken == null) {
+            return null; // unknown
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String tokenTimestampEpochStr = userToken.getTimestamp();
+        if (tokenTimestampEpochStr == null) {
+            return null;
+        }
+        long tokenTimestampEpochMillis = Long.parseLong(tokenTimestampEpochStr, 10);
+        Instant tokenTimestamp = Instant.ofEpochMilli(tokenTimestampEpochMillis); // TODO check assumption that this marks the start of lifespan
+        String lifespanInSeconds = userToken.getLifespanInSeconds();
+        if (lifespanInSeconds == null) {
+            return null;
+        }
+        Instant expiry = tokenTimestamp.plus(Long.parseLong(lifespanInSeconds), ChronoUnit.SECONDS);
+        return expiry;
     }
 }

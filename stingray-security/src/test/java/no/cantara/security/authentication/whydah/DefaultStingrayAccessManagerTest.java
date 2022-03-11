@@ -36,7 +36,7 @@ public class DefaultStingrayAccessManagerTest {
             Map<String, String> roleValueByName = new LinkedHashMap<>();
             roleValueByName.put("access-groups-for-unit-testing", "readers");
             return roleValueByName;
-        }, "access-groups");
+        }, "access-groups", () -> null);
         assertTrue(accessManager.hasAccess(authenticatedJohn, "read"));
         assertFalse(accessManager.hasAccess(authenticatedJohn, "write"));
 
@@ -44,7 +44,7 @@ public class DefaultStingrayAccessManagerTest {
             Map<String, String> roleValueByName = new LinkedHashMap<>();
             roleValueByName.put("access-groups-for-unit-testing", "admins");
             return roleValueByName;
-        }, "access-groups");
+        }, "access-groups", () -> null);
         assertTrue(accessManager.hasAccess(authenticatedSuperuser, "read"));
         assertTrue(accessManager.hasAccess(authenticatedSuperuser, "write"));
 

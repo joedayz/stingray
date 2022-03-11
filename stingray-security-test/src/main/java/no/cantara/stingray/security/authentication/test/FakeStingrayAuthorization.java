@@ -2,8 +2,13 @@ package no.cantara.stingray.security.authentication.test;
 
 import net.whydah.sso.application.mappers.ApplicationTagMapper;
 import net.whydah.sso.application.types.Tag;
+import no.cantara.stingray.security.authentication.DefaultStingrayApplicationAuthentication;
+import no.cantara.stingray.security.authentication.StingrayApplicationAuthentication;
+import no.cantara.stingray.security.authentication.StingrayCantaraUserAuthentication;
+import no.cantara.stingray.security.authentication.StingrayUserAuthentication;
 import no.cantara.stingray.security.authentication.whydah.WhydahStingrayAuthenticationManagerFactory;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,6 +62,16 @@ public class FakeStingrayAuthorization {
                 sb.append(", fake-tags: ").append(ApplicationTagMapper.toApplicationTagString(tags));
             }
             return sb.toString();
+        }
+
+        public StingrayApplicationAuthentication buildAuth() {
+            String forwardingToken = build();
+            return new DefaultStingrayApplicationAuthentication(
+                    applicationId,
+                    forwardingToken,
+                    Collections::emptyList,
+                    WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_APPLICATION_TAG_NAME
+            );
         }
     }
 
@@ -131,6 +146,20 @@ public class FakeStingrayAuthorization {
                 }
             }
             return sb.toString();
+        }
+
+        public StingrayUserAuthentication buildAuth() {
+            String forwardingToken = build();
+            return new StingrayCantaraUserAuthentication(
+                    userId,
+                    username,
+                    usertokenId,
+                    customerRef,
+                    () -> forwardingToken,
+                    Collections::emptyMap,
+                    WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_USER_ROLE_NAME_FIX,
+                    () -> null
+            );
         }
     }
 }

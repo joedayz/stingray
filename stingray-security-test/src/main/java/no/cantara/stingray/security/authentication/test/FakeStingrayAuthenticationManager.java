@@ -40,7 +40,7 @@ public class FakeStingrayAuthenticationManager implements StingrayAuthentication
         fakeUser = new StingrayCantaraUserAuthentication(defaultFakeUserId, defaultFakeUsername, defaultFakeUsertokenId, defaultFakeCustomerRef, () -> String.format("fake-sso-id: %s, fake-customer-ref: %s", defaultFakeUserId, defaultFakeCustomerRef), () -> {
             Map<String, String> roles = new LinkedHashMap<>();
             return roles;
-        }, WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_USER_ROLE_NAME_FIX);
+        }, WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_USER_ROLE_NAME_FIX, () -> null);
         fakeApplication = new DefaultStingrayApplicationAuthentication(defaultFakeApplicationId, String.format("fake-application-id: %s", defaultFakeApplicationId), Collections::emptyList, WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_APPLICATION_TAG_NAME);
     }
 
@@ -91,7 +91,7 @@ public class FakeStingrayAuthenticationManager implements StingrayAuthentication
             }
             return roleValueByName;
         };
-        return new StingrayCantaraUserAuthentication(ssoId, username, usertokenId, customerRef, forwardingTokenGenerator, rolesSupplier, WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_USER_ROLE_NAME_FIX);
+        return new StingrayCantaraUserAuthentication(ssoId, username, usertokenId, customerRef, forwardingTokenGenerator, rolesSupplier, WhydahStingrayAuthenticationManagerFactory.DEFAULT_AUTH_GROUP_USER_ROLE_NAME_FIX, () -> null);
     }
 
     @Override

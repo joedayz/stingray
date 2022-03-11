@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,6 +73,7 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
         String customerRef;
         Supplier<String> forwardingTokenGenerator = () -> token; // forwarding incoming token by default
         Supplier<Map<String, String>> rolesGenerator;
+        Supplier<UserToken> userTokenSupplier;
         if (token.length() > 50) {
             log.trace("Suspected JWT-token is {}", token);
         } else {
@@ -91,8 +94,10 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
                 customerRef = jwtUtils.getCustomerRefFromJwtToken();
                 usertokenid = jwtUtils.getUserTokenFromJwtToken();
                 final String theUserTokenId = usertokenid;
+                UserTokenCacheEntry userTokenCacheEntry = new UserTokenCacheEntry(theUserTokenId);
+                userTokenSupplier = userTokenCacheEntry::getUserToken;
                 rolesGenerator = () -> {
-                    UserToken userToken = whydahService.findUserTokenFromUserTokenId(theUserTokenId);
+                    UserToken userToken = userTokenCacheEntry.getUserToken();
                     if (userToken == null) {
                         return Collections.emptyMap();
                     }
@@ -113,6 +118,7 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
                 final String userTokenFromUserTokenId = whydahService.getUserTokenByUserTicket(userticket);
                 if (userTokenFromUserTokenId != null && UserTokenMapper.validateUserTokenMD5Signature(userTokenFromUserTokenId)) {
                     final UserToken userToken = UserTokenMapper.fromUserTokenXml(userTokenFromUserTokenId);
+                    userTokenSupplier = () -> userToken;
                     usertokenid = userToken.getUserTokenId();
                     ssoId = userToken.getUid();
                     customerRef = userToken.getPersonRef();
@@ -168,9 +174,44 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
         }
         log.debug("Successful user authentication");
 
-        return new StingrayCantaraUserAuthentication(ssoId, ssoId, usertokenid, customerRef, forwardingTokenGenerator, rolesGenerator, whydahAuthGroupUserRoleNameFix);
+        return new StingrayCantaraUserAuthentication(ssoId, ssoId, usertokenid, customerRef, forwardingTokenGenerator, rolesGenerator, whydahAuthGroupUserRoleNameFix, userTokenSupplier);
     }
 
+    private class UserTokenCacheEntry {
+        private final static int MAX_LOAD_ATTEMPTS = 1;
+        private final String userTokenId;
+        private final AtomicInteger loadsAttempted = new AtomicInteger(0);
+        private final AtomicReference<UserToken> userTokenRef = new AtomicReference<>();
+
+        UserTokenCacheEntry(String userTokenId) {
+            this.userTokenId = userTokenId;
+        }
+
+        UserToken getUserToken() {
+            if (userTokenRef.get() == null && loadsAttempted.get() < MAX_LOAD_ATTEMPTS) {
+                synchronized (userTokenRef) {
+                    if (userTokenRef.get() == null) {
+                        UserToken userToken = load();
+                        if (userToken == null) {
+                            throw new RuntimeException("Unable to load UserToken");
+                        }
+                        userTokenRef.set(userToken);
+                    }
+                }
+            }
+            UserToken userToken = userTokenRef.get();
+            return userToken; // can be null if load failed
+        }
+
+        private UserToken load() {
+            try {
+                UserToken userToken = whydahService.findUserTokenFromUserTokenId(userTokenId);
+                return userToken;
+            } finally {
+                loadsAttempted.incrementAndGet();
+            }
+        }
+    }
 
     @Override
     public StingrayApplicationAuthentication authenticateAsApplication(final String authorizationHeader) throws
