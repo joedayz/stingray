@@ -70,6 +70,7 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
         String usertokenid;
         String token = authorization.substring("Bearer ".length());
         String ssoId;
+        String username;
         String customerRef;
         Supplier<String> forwardingTokenGenerator = () -> token; // forwarding incoming token by default
         Supplier<Map<String, String>> rolesGenerator;
@@ -90,7 +91,8 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
             try {
                 log.debug("Resolving JWT-token");
                 StingrayJwtHelper jwtUtils = new StingrayJwtHelper(oauth2Uri, token);
-                ssoId = jwtUtils.getUserNameFromJwtToken();
+                ssoId = null; // lazy loaded from user-token
+                username = jwtUtils.getUserNameFromJwtToken();
                 customerRef = jwtUtils.getCustomerRefFromJwtToken();
                 usertokenid = jwtUtils.getUserTokenFromJwtToken();
                 final String theUserTokenId = usertokenid;
@@ -121,6 +123,7 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
                     userTokenSupplier = () -> userToken;
                     usertokenid = userToken.getUserTokenId();
                     ssoId = userToken.getUid();
+                    username = userToken.getUserName();
                     customerRef = userToken.getPersonRef();
                     final String theUserTokenId = usertokenid;
                     final String theSsoId = ssoId;
@@ -174,7 +177,7 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
         }
         log.debug("Successful user authentication");
 
-        return new StingrayCantaraUserAuthentication(ssoId, ssoId, usertokenid, customerRef, forwardingTokenGenerator, rolesGenerator, whydahAuthGroupUserRoleNameFix, userTokenSupplier);
+        return new StingrayCantaraUserAuthentication(ssoId, username, usertokenid, customerRef, forwardingTokenGenerator, rolesGenerator, whydahAuthGroupUserRoleNameFix, userTokenSupplier);
     }
 
     private class UserTokenCacheEntry {

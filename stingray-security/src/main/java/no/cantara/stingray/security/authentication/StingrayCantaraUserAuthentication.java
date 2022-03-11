@@ -37,6 +37,14 @@ public class StingrayCantaraUserAuthentication implements StingrayUserAuthentica
 
     @Override
     public String ssoId() {
+        if (userId == null) {
+            // typical case if we are using JWT as it does not contain UID directly
+            UserToken userToken = lazyUserTokenForAdditionalFieldsSupplier.get();
+            if (userToken == null) {
+                return null;
+            }
+            return userToken.getUid();
+        }
         return userId;
     }
 
