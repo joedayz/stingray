@@ -16,7 +16,7 @@
     <description>Stingray-Parent-JDK8</description>
 
     <properties>
-        <metrics.version>4.2.8</metrics.version>
+        <metrics.version>4.2.9</metrics.version>
         <jersey.version>2.35</jersey.version>
         <jetty.version>9.4.45.v20220203</jetty.version>
         <swagger.version>2.1.13</swagger.version>
