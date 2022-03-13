@@ -45,24 +45,25 @@ public class StingraySecurityFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
+        String relativePath = requestContext.getUriInfo().getPath();
+        final String path = requestContext.getUriInfo().getBaseUri().getPath() + relativePath;
         Method resourceMethod = jaxRsEndpointResolver.apply(requestContext);
         StingraySecurityOverride securityOverride = resourceMethod.getDeclaredAnnotation(StingraySecurityOverride.class);
         if (securityOverride != null) {
             if (securityOverride.logAccess()) {
-                log.trace("Access granted through security-override to: {} /{}", requestContext.getMethod(), requestContext.getUriInfo().getPath());
+                log.trace("Access granted through security-override to: {} {}", requestContext.getMethod(), path);
             }
             return; // access granted, no authentication or access-check needed
         }
-        final String path = requestContext.getUriInfo().getPath();
-        if (securityOverriddenPaths.contains(path)) {
-            log.trace("Access granted through default security-override to resource: {} /{}", requestContext.getMethod(), requestContext.getUriInfo().getPath());
+        if (securityOverriddenPaths.contains(relativePath)) {
+            log.trace("Access granted through default security-override to resource: {} {}", requestContext.getMethod(), path);
             return; // access always granted to resource classes that are configured in the security-overridden set
         }
         String authorizationHeader = requestContext.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         StingrayAuthenticationResult authenticationResult = authenticationManager.authenticate(authorizationHeader);
         if (!authenticationResult.isValid()) {
             // authentication failed
-            log.trace("Access unauthorized (401) due to invalid authorization header to: {} /{}", requestContext.getMethod(), requestContext.getUriInfo().getPath());
+            log.trace("Access unauthorized (401) due to invalid authorization header to: {} {}", requestContext.getMethod(), path);
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
             return;
         }
@@ -71,7 +72,7 @@ public class StingraySecurityFilter implements ContainerRequestFilter {
         StingrayAction secureAction = resourceMethod.getDeclaredAnnotation(StingrayAction.class);
         if (secureAction == null) {
             // forbid access to endpoint without secure-action annotation, i.e. secure-by-default
-            log.trace("Access forbidden (403) due to missing @StingrayAction annotation on {}.{}() to: {} /{}", resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), requestContext.getUriInfo().getPath());
+            log.trace("Access forbidden (403) due to missing @StingrayAction annotation on {}.{}() to: {} {}", resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), path);
             requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
             return;
         }
@@ -79,12 +80,12 @@ public class StingraySecurityFilter implements ContainerRequestFilter {
         boolean hasAccess = accessManager.hasAccess(authentication, action);
         if (!hasAccess) {
             // access not allowed according to rules
-            log.trace("Access forbidden (403) because {} '{}' is not allowed to perform action '{}' on on {}.{}() needed to: {} /{}", authentication.isApplication() ? "application" : "user", authentication.ssoId(), action, resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), requestContext.getUriInfo().getPath());
+            log.trace("Access forbidden (403) because {} '{}' is not allowed to perform action '{}' on on {}.{}() needed to: {} {}", authentication.isApplication() ? "application" : "user", authentication.ssoId(), action, resourceMethod.getDeclaringClass().getName(), resourceMethod.getName(), requestContext.getMethod(), path);
             requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).build());
             return;
         }
         // access granted
-        log.trace("Access allowed for {} '{}' on action '{}' to: {} /{}", authentication.isApplication() ? "application" : "user", authentication.ssoId(), action, requestContext.getMethod(), requestContext.getUriInfo().getPath());
+        log.trace("Access allowed for {} '{}' on action '{}' to: {} {}", authentication.isApplication() ? "application" : "user", authentication.ssoId(), action, requestContext.getMethod(), path);
         requestContext.setSecurityContext(new StingraySecurityContext(authentication));
     }
 }
