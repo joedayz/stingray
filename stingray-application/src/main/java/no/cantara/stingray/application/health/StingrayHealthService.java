@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,6 +48,7 @@ public class StingrayHealthService implements Runnable {
     private final AtomicLong healthComputeTimeMs = new AtomicLong(-1);
     private final HealthCheckRegistry healthCheckRegistry;
     private final List<StingrayHealthProbe> healthProbes = new CopyOnWriteArrayList<>();
+    private final CountDownLatch initializationCompleteLatch = new CountDownLatch(1);
 
     /*
      * State only that is only read and written by the healthUpdateThread, so no need for synchronization
@@ -79,6 +82,10 @@ public class StingrayHealthService implements Runnable {
         shouldRun.set(false);
     }
 
+    public void awaitInitialization(int timeout, TimeUnit unit) throws InterruptedException {
+        initializationCompleteLatch.await(timeout, unit);
+    }
+
     @Override
     public void run() {
         try {
@@ -95,34 +102,43 @@ public class StingrayHealthService implements Runnable {
                 log.warn("While setting health initialization message", t);
             }
 
+            // initial health update to complete initialization
+            performHealthUpdate();
+            initializationCompleteLatch.countDown();
+            Thread.sleep(Duration.of(updateInterval, updateIntervalUnit).toMillis());
+
             // health-update loop
             while (shouldRun.get()) {
-                try {
-                    boolean changed = updateHealth(currentHealth);
-                    if (changed) {
-                        currentHealthSerialized.set(currentHealth.toString());
-                    }
-                    Thread.sleep(Duration.of(updateInterval, updateIntervalUnit).toMillis());
-                } catch (Throwable t) {
-                    log.error("While updating health", t);
-                    {
-                        ObjectNode health = mapper.createObjectNode();
-                        health.put("Status", "FAIL");
-                        health.put("errorMessage", "Exception while updating health");
-                        StringWriter strWriter = new StringWriter();
-                        t.printStackTrace(new PrintWriter(strWriter));
-                        health.put("errorCause", strWriter.toString());
-                        currentHealthSerialized.set(health.toPrettyString());
-                    }
-                    Thread.sleep(Duration.of(updateInterval, updateIntervalUnit).toMillis());
-                }
+                performHealthUpdate();
+                Thread.sleep(Duration.of(updateInterval, updateIntervalUnit).toMillis());
             }
+
         } catch (Throwable t) {
             log.error("Update thread died!", t);
             {
                 ObjectNode health = mapper.createObjectNode();
                 health.put("Status", "FAIL");
                 health.put("errorMessage", "Health updater thread died with an unexpected error");
+                StringWriter strWriter = new StringWriter();
+                t.printStackTrace(new PrintWriter(strWriter));
+                health.put("errorCause", strWriter.toString());
+                currentHealthSerialized.set(health.toPrettyString());
+            }
+        }
+    }
+
+    private void performHealthUpdate() {
+        try {
+            boolean changed = updateHealth(currentHealth);
+            if (changed) {
+                currentHealthSerialized.set(currentHealth.toString());
+            }
+        } catch (Throwable t) {
+            log.error("While updating health", t);
+            {
+                ObjectNode health = mapper.createObjectNode();
+                health.put("Status", "FAIL");
+                health.put("errorMessage", "Exception while updating health");
                 StringWriter strWriter = new StringWriter();
                 t.printStackTrace(new PrintWriter(strWriter));
                 health.put("errorCause", strWriter.toString());
