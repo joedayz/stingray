@@ -26,6 +26,12 @@ import java.util.stream.Collectors;
 
 public class FakeStingrayAuthenticationManager implements StingrayAuthenticationManager {
 
+    /**
+     * This field is deprecated and will be removed in a future version.
+     *
+     * @deprecated Use {@link FakeStingrayAuthorization#BEARER_TOKEN_UNAUTHORIZED} instead.
+     */
+    @Deprecated
     public static final String BEARER_TOKEN_UNAUTHORIZED = "Bearer unauthorized";
 
     static final Pattern fakeUserTokenPattern = Pattern.compile("Bearer\\s+fake-sso-id:\\s*(?<ssoid>[^,]*),\\s*(?:fake-username:\\s*(?<username>[^,]*),)?\\s*(?:fake-usertoken-id:\\s*(?<usertokenid>[^,]*),)?\\s*fake-customer-ref:\\s*(?<customerref>[^,]*)(?:,\\s*fake-roles:\\s*(?<roles>.*))?");
@@ -50,7 +56,7 @@ public class FakeStingrayAuthenticationManager implements StingrayAuthentication
         if (authorization == null || authorization.isEmpty()) {
             return fakeUser; // use default fake user when token is missing
         }
-        if (authorization.equals(BEARER_TOKEN_UNAUTHORIZED)) {
+        if (authorization.equals(FakeStingrayAuthorization.BEARER_TOKEN_UNAUTHORIZED)) {
             // special case where test intentionally attempts to set an illegal token
             throw new UnauthorizedStingrayException();
         }
@@ -100,7 +106,7 @@ public class FakeStingrayAuthenticationManager implements StingrayAuthentication
         if (authorization == null || authorization.isEmpty()) {
             return fakeApplication; // use default fake application when token is missing
         }
-        if (authorization.equals(BEARER_TOKEN_UNAUTHORIZED)) {
+        if (authorization.equals(FakeStingrayAuthorization.BEARER_TOKEN_UNAUTHORIZED)) {
             // special case where test intentionally attempts to set an illegal token
             throw new UnauthorizedStingrayException();
         }
@@ -125,7 +131,7 @@ public class FakeStingrayAuthenticationManager implements StingrayAuthentication
         if (authorization == null || authorization.isEmpty()) {
             return new DefaultStingrayAuthenticationResult(fakeApplication); // use default fake application when token is missing
         }
-        if (authorization.equals(BEARER_TOKEN_UNAUTHORIZED)) {
+        if (authorization.equals(FakeStingrayAuthorization.BEARER_TOKEN_UNAUTHORIZED)) {
             // special case where test intentionally attempts to set an illegal token
             return new DefaultStingrayAuthenticationResult(null);
         }

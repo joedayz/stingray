@@ -145,16 +145,16 @@ class FakeStingrayAuthenticationManagerTest {
     public void thatFakeAuthenticationEvaluatesUnauthorizedWhenSpecialTokenIsUsed() {
         StingrayAuthenticationManager manager = new FakeStingrayAuthenticationManager("myappid", "fake-user", "fake-username", "fake-usertoken-id", "fake-customer", "fake-application");
         try {
-            manager.authenticateAsUser(FakeStingrayAuthenticationManager.BEARER_TOKEN_UNAUTHORIZED);
+            manager.authenticateAsUser(FakeStingrayAuthorization.BEARER_TOKEN_UNAUTHORIZED);
             Assertions.fail("Did not throw expected UnauthorizedException");
         } catch (UnauthorizedStingrayException e) {
         }
         try {
-            manager.authenticateAsApplication(FakeStingrayAuthenticationManager.BEARER_TOKEN_UNAUTHORIZED);
+            manager.authenticateAsApplication(FakeStingrayAuthorization.BEARER_TOKEN_UNAUTHORIZED);
             Assertions.fail("Did not throw expected UnauthorizedException");
         } catch (UnauthorizedStingrayException e) {
         }
-        StingrayAuthenticationResult result = manager.authenticate(FakeStingrayAuthenticationManager.BEARER_TOKEN_UNAUTHORIZED);
+        StingrayAuthenticationResult result = manager.authenticate(FakeStingrayAuthorization.BEARER_TOKEN_UNAUTHORIZED);
         assertFalse(result.isValid());
         assertFalse(result.isApplication());
         assertFalse(result.isUser());

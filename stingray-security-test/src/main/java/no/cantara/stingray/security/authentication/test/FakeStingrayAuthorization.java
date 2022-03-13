@@ -16,6 +16,12 @@ import java.util.Map;
 
 public class FakeStingrayAuthorization {
 
+    /**
+     * Put the value of this constant in Authorization header when using fake authentication manager to force
+     * applications to respond with 401 Unauthorized.
+     */
+    public static final String BEARER_TOKEN_UNAUTHORIZED = "Bearer unauthorized";
+
     public static FakeStingrayApplicationAuthorizationBuilder application() {
         return new FakeStingrayApplicationAuthorizationBuilder();
     }
