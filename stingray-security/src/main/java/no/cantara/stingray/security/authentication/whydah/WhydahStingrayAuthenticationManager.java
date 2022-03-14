@@ -123,6 +123,10 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
                     userTokenSupplier = () -> userToken;
                     usertokenid = userToken.getUserTokenId();
                     ssoId = userToken.getUid();
+                    if (ssoId == null || ssoId.isEmpty()) {
+                        log.debug("Unsucessful resolving of user-authentication, ssoId is null or empty. ssoid '{}'", ssoId);
+                        throw new UnauthorizedStingrayException();
+                    }
                     username = userToken.getUserName();
                     customerRef = userToken.getPersonRef();
                     final String theUserTokenId = usertokenid;
@@ -163,10 +167,6 @@ public class WhydahStingrayAuthenticationManager implements StingrayAuthenticati
 
         boolean okUserSession = whydahService.validateUserTokenId(usertokenid);
 
-        if (ssoId == null || ssoId.isEmpty()) {
-            log.debug("Unsucessful resolving of user-authentication, ssoId is null or empty. ssoid '{}'", ssoId);
-            throw new UnauthorizedStingrayException();
-        }
         if (customerRef == null || customerRef.isEmpty()) {
             log.debug("Unsucessful resolving of user-authentication, customerRef is null or empty. customerRef {}", customerRef);
             throw new UnauthorizedStingrayException();
