@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
-class DefaultStingrayHttpResponse implements StingrayHttpResponse {
+public class DefaultStingrayHttpResponse implements StingrayHttpResponse {
 
     private final String requestUrl;
     private final Map<String, StingrayHttpHeader> requestHeaders;
