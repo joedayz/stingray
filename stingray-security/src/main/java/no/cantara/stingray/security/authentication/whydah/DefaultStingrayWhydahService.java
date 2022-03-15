@@ -122,7 +122,7 @@ public class DefaultStingrayWhydahService implements StingrayWhydahService {
     public boolean validateUserTokenId(String usertokenid) {
         final String securityTokenServiceUri = was.getSTS();
         final String applicationTokenId = was.getActiveApplicationTokenId();
-        log.debug("Validate usertokenid using parameters {}, {}", securityTokenServiceUri, applicationTokenId);
+        log.debug("Validate usertokenid using url: {}, appTokenId: {}, usertokenId: {}", securityTokenServiceUri, applicationTokenId, usertokenid);
         boolean okUserSession = new CommandValidateUserTokenId(URI.create(securityTokenServiceUri), applicationTokenId, usertokenid)
                 .execute();
         return okUserSession;
