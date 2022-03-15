@@ -53,6 +53,7 @@
         <module>stingray-security-test</module>
         <module>stingray-sql</module>
         <module>stingray-sql-test</module>
+        <module>stingray-http-client</module>
         <module>samples</module>
     </modules>
 
