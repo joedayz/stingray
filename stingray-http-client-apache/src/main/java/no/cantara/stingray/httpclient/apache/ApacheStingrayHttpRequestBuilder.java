@@ -333,6 +333,7 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
     public StingrayHttpResponse execute() {
         try {
             URI uri = toUri();
+            // TODO consider fail-fast when target or path is not specified?
             Request request;
             switch (method) {
                 case GET:

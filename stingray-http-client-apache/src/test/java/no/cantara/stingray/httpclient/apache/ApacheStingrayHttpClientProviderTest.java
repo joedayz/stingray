@@ -11,6 +11,13 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -102,6 +109,52 @@ public class ApacheStingrayHttpClientProviderTest {
                     .isSuccessful();
             fail();
         } catch (StingrayHttpClientException e) {
+        }
+    }
+
+    @Test
+    public void clientUsingFunctionalBodyToPostWorks() {
+        StingrayHttpClientFactory clientFactory = StingrayHttpClients.factory();
+        StingrayHttpClient client = clientFactory.newClient()
+                .build();
+
+        String responseContent = client.post()
+                .path("http://localhost:" + port + "/echo")
+                .bodyJson(this::getMyBody)
+                .execute()
+                .isSuccessful()
+                .contentAs(this::getMyContent);
+
+        assertEquals("{\"prop1\":\"val1\"}", responseContent);
+    }
+
+    private String getMyContent(InputStream stream) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+        sb.append(br.readLine());
+        stream.close();
+        return sb.toString();
+    }
+
+    private String getMyBody() throws IOException {
+        if (false) {
+            throw new IOException("Dummy");
+        }
+        return "{\"prop1\":\"val1\"}";
+    }
+
+    @Test
+    public void clientWithoutTargetOrPath() {
+        StingrayHttpClientFactory clientFactory = StingrayHttpClients.factory();
+        StingrayHttpClient client = clientFactory.newClient()
+                .build();
+
+        try {
+            client.post()
+                    .bodyJson("{\"prop1\":\"val1\"}")
+                    .execute();
+            fail();
+        } catch (UncheckedIOException e) {
         }
     }
 
