@@ -16,6 +16,14 @@ class EchoHandler extends AbstractHandler {
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         Enumeration<String> headerNames = request.getHeaderNames();
+        System.out.printf("REQUEST URL: %s%n", request.getRequestURL());
+        if (!"/echo".equals(request.getServletPath() + request.getPathInfo())) {
+            response.setStatus(400);
+            response.getOutputStream()
+                    .close();
+            return;
+        }
+        System.out.printf("%s %s%s%n", request.getMethod(), request.getServletPath(), request.getPathInfo());
         System.out.printf("REQUEST HEADERS:%n");
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();

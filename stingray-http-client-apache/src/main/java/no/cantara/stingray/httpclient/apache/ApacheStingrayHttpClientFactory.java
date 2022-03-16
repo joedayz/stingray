@@ -5,12 +5,12 @@ import no.cantara.stingray.httpclient.StingrayHttpClientFactory;
 public class ApacheStingrayHttpClientFactory implements StingrayHttpClientFactory {
 
     @Override
-    public ApacheStingrayHttpClientBuilder client() {
+    public ApacheStingrayHttpClientBuilder newClient() {
         return new ApacheStingrayHttpClientBuilder();
     }
 
     @Override
-    public ApacheStingrayHttpClientConfigurationBuilder configuration() {
+    public ApacheStingrayHttpClientConfigurationBuilder newConfiguration() {
         return new ApacheStingrayHttpClientConfigurationBuilder();
     }
 }

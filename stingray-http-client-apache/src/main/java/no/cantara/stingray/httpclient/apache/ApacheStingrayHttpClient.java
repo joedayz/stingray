@@ -1,18 +1,32 @@
 package no.cantara.stingray.httpclient.apache;
 
 import no.cantara.stingray.httpclient.StingrayHttpClient;
+import no.cantara.stingray.httpclient.StingrayHttpClientConfiguration;
 import no.cantara.stingray.httpclient.StingrayHttpRequestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 class ApacheStingrayHttpClient implements StingrayHttpClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApacheStingrayHttpClient.class);
 
-    final ApacheStingrayHttpClientConfiguration configuration;
+    private final ApacheStingrayHttpClientConfiguration configuration;
+    private final ApacheStingrayHttpTarget target;
 
-    ApacheStingrayHttpClient(ApacheStingrayHttpClientConfiguration configuration) {
+    ApacheStingrayHttpClient(ApacheStingrayHttpClientConfiguration configuration, ApacheStingrayHttpTarget target) {
+        Objects.requireNonNull(configuration);
         this.configuration = configuration;
+        this.target = target;
+    }
+
+    StingrayHttpClientConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    ApacheStingrayHttpTarget getTarget() {
+        return target;
     }
 
     @Override

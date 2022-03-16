@@ -8,5 +8,9 @@ public interface StingrayHttpClientBuilder {
 
     StingrayHttpClientBuilder withConfiguration(StingrayHttpClientConfiguration configuration);
 
+    StingrayHttpClientBuilder useTarget(Consumer<StingrayHttpTargetBuilder> targetBuilderConsumer);
+
+    StingrayHttpClientBuilder withTarget(StingrayHttpTarget target);
+
     StingrayHttpClient build();
 }

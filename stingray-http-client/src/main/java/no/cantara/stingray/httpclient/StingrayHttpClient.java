@@ -17,5 +17,4 @@ public interface StingrayHttpClient {
     StingrayHttpRequestBuilder patch();
 
     StingrayHttpRequestBuilder trace();
-
 }

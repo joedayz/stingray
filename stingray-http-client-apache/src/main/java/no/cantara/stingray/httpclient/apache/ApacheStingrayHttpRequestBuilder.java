@@ -1,5 +1,6 @@
 package no.cantara.stingray.httpclient.apache;
 
+import no.cantara.stingray.httpclient.StingrayHttpClientConfiguration;
 import no.cantara.stingray.httpclient.StingrayHttpClientException;
 import no.cantara.stingray.httpclient.StingrayHttpHeader;
 import no.cantara.stingray.httpclient.StingrayHttpRequestBuilder;
@@ -34,6 +35,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Optional.ofNullable;
+
 class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
 
     private final ApacheStingrayHttpClient apacheStingrayHttpClient;
@@ -49,10 +52,11 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
 
     ApacheStingrayHttpRequestBuilder(ApacheStingrayHttpClient apacheStingrayHttpClient, HttpMethod method) {
         this.apacheStingrayHttpClient = apacheStingrayHttpClient;
-        this.connectTimeoutMs = (int) apacheStingrayHttpClient.configuration.getConnectTimeout().toMillis();
-        this.socketTimeoutMs = (int) apacheStingrayHttpClient.configuration.getSocketTimeout().toMillis();
+        StingrayHttpClientConfiguration configuration = apacheStingrayHttpClient.getConfiguration();
+        this.connectTimeoutMs = (int) configuration.getConnectTimeout().toMillis();
+        this.socketTimeoutMs = (int) configuration.getSocketTimeout().toMillis();
         this.method = method;
-        this.headers.putAll(apacheStingrayHttpClient.configuration.getDefaultHeaders());
+        this.headers.putAll(configuration.getDefaultHeaders());
     }
 
     @Override
@@ -318,8 +322,11 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
     URI toUri() {
         String queryString = URLEncodedUtils.format(queryParams, StandardCharsets.UTF_8);
         String pathAndQuery = path + (queryString.isEmpty() ? "" : (path.contains("?") ? "&" : "?") + queryString);
-        URI baseUri = apacheStingrayHttpClient.configuration.getBaseUri();
-        return URI.create(baseUri.toString() + pathAndQuery);
+        String baseUrl = ofNullable(apacheStingrayHttpClient.getTarget())
+                .map(ApacheStingrayHttpTarget::getUri)
+                .map(URI::toString)
+                .orElse("");
+        return URI.create(baseUrl + pathAndQuery);
     }
 
     @Override

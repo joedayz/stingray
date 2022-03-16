@@ -2,7 +2,7 @@ package no.cantara.stingray.httpclient;
 
 public interface StingrayHttpClientFactory {
 
-    StingrayHttpClientBuilder client();
+    StingrayHttpClientBuilder newClient();
 
-    StingrayHttpClientConfigurationBuilder configuration();
+    StingrayHttpClientConfigurationBuilder newConfiguration();
 }
