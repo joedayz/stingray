@@ -5,10 +5,8 @@ import no.cantara.stingray.httpclient.functionalinterfaces.StingrayHttpException
 
 import java.io.InputStream;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
-interface StingrayHttpResponse {
+public interface StingrayHttpResponse {
 
     StingrayHttpResponse isSuccessful() throws StingrayHttpClientException;
 
@@ -26,11 +24,11 @@ interface StingrayHttpResponse {
 
     List<String> headerNames();
 
-    <R> R contentAs(StingrayHttpExceptionalStringFunction<R> converter);
+    <R> R contentAs(StingrayHttpExceptionalStringFunction<R> converter) throws StingrayHttpClientException;
 
-    <R> R contentAs(StingrayHttpExceptionalStreamFunction<R> converter);
+    <R> R contentAs(StingrayHttpExceptionalStreamFunction<R> converter) throws StingrayHttpClientException;
 
-    String contentAsString();
+    String contentAsString() throws StingrayHttpClientException;
 
     InputStream content();
 

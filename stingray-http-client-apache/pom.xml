@@ -8,12 +8,12 @@
         <version>1.6.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>stingray-http-client</artifactId>
+    <artifactId>stingray-http-client-apache</artifactId>
     <version>1.6.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>StingrayHttpClient</name>
-    <description>Stingray Http Client</description>
+    <name>Stingray Apache Http Client</name>
+    <description>Stingray Apache Http Client</description>
 
     <properties>
         <module.build.sourceEncoding>UTF-8</module.build.sourceEncoding>
@@ -21,13 +21,32 @@
 
     <dependencies>
         <dependency>
+            <groupId>no.cantara.stingray</groupId>
+            <artifactId>stingray-http-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.skyscreamer</groupId>
+            <artifactId>jsonassert</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -38,6 +57,12 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>11.0.8</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

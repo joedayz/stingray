@@ -54,6 +54,7 @@
         <module>stingray-sql</module>
         <module>stingray-sql-test</module>
         <module>stingray-http-client</module>
+        <module>stingray-http-client-apache</module>
         <module>samples</module>
     </modules>
 

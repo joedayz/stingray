@@ -1,9 +1,5 @@
 package no.cantara.stingray.httpclient;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.util.EntityUtils;
-
-import java.io.IOException;
 import java.util.Map;
 
 public class StingrayHttpClientException extends RuntimeException {
@@ -11,14 +7,14 @@ public class StingrayHttpClientException extends RuntimeException {
     // request
     private final String url;
     private final Map<String, StingrayHttpHeader> requestHeaders;
-    private final HttpEntity requestBody;
+    private final StingrayRequestBody requestBody;
 
     //response
     private final int statusCode;
     private final Map<String, StingrayHttpHeader> responseHeaders;
     private final String responseBody;
 
-    private StingrayHttpClientException(String url, Map<String, StingrayHttpHeader> requestHeaders, HttpEntity requestBody, int statusCode, Map<String, StingrayHttpHeader> responseHeaders, String responseBody) {
+    private StingrayHttpClientException(String url, Map<String, StingrayHttpHeader> requestHeaders, StingrayRequestBody requestBody, int statusCode, Map<String, StingrayHttpHeader> responseHeaders, String responseBody) {
         this.url = url;
         this.requestHeaders = requestHeaders;
         this.requestBody = requestBody;
@@ -36,13 +32,7 @@ public class StingrayHttpClientException extends RuntimeException {
     }
 
     public String getRequestBody() {
-        String body;
-        try {
-            body = EntityUtils.toString(requestBody);
-        } catch (IOException e) {
-            return null;
-        }
-        return body;
+        return requestBody.asString();
     }
 
     public int getStatusCode() {
@@ -57,16 +47,16 @@ public class StingrayHttpClientException extends RuntimeException {
         return responseBody;
     }
 
-    static Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
-    static class Builder {
+    public static class Builder {
 
         // request
         private String url;
         private Map<String, StingrayHttpHeader> requestHeaders;
-        private HttpEntity requestBody;
+        private StingrayRequestBody requestBody;
 
         //response
         private int statusCode;
@@ -76,37 +66,37 @@ public class StingrayHttpClientException extends RuntimeException {
         private Builder() {
         }
 
-        Builder withUrl(String url) {
+        public Builder withUrl(String url) {
             this.url = url;
             return this;
         }
 
-        Builder withRequestHeaders(Map<String, StingrayHttpHeader> requestHeaders) {
+        public Builder withRequestHeaders(Map<String, StingrayHttpHeader> requestHeaders) {
             this.requestHeaders = requestHeaders;
             return this;
         }
 
-        Builder withRequestBody(HttpEntity requestBody) {
+        public Builder withRequestBody(StingrayRequestBody requestBody) {
             this.requestBody = requestBody;
             return this;
         }
 
-        Builder withStatusCode(int statusCode) {
+        public Builder withStatusCode(int statusCode) {
             this.statusCode = statusCode;
             return this;
         }
 
-        Builder withResponseHeaders(Map<String, StingrayHttpHeader> responseHeaders) {
+        public Builder withResponseHeaders(Map<String, StingrayHttpHeader> responseHeaders) {
             this.responseHeaders = responseHeaders;
             return this;
         }
 
-        Builder withResponseBody(String responseBody) {
+        public Builder withResponseBody(String responseBody) {
             this.responseBody = responseBody;
             return this;
         }
 
-        StingrayHttpClientException build() {
+        public StingrayHttpClientException build() {
             return new StingrayHttpClientException(url, requestHeaders, requestBody, statusCode, responseHeaders, responseBody);
         }
     }

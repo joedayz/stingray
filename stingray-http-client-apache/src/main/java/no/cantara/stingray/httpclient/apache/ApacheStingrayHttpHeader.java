@@ -1,14 +1,16 @@
-package no.cantara.stingray.httpclient;
+package no.cantara.stingray.httpclient.apache;
+
+import no.cantara.stingray.httpclient.StingrayHttpHeader;
 
 import java.util.List;
 import java.util.Objects;
 
-class DefaultStingrayHttpHeader implements StingrayHttpHeader {
+class ApacheStingrayHttpHeader implements StingrayHttpHeader {
 
     private final String name;
     private final List<String> values;
 
-    DefaultStingrayHttpHeader(String name, List<String> values) {
+    ApacheStingrayHttpHeader(String name, List<String> values) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(values);
         this.name = name;
