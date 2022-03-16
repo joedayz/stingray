@@ -1,5 +1,8 @@
 package no.cantara.stingray.httpclient;
 
+import no.cantara.stingray.httpclient.functionalinterfaces.StingrayHttpExceptionalStreamFunction;
+import no.cantara.stingray.httpclient.functionalinterfaces.StingrayHttpExceptionalStreamSupplier;
+import no.cantara.stingray.httpclient.functionalinterfaces.StingrayHttpExceptionalStringFunction;
 import org.apache.http.Header;
 import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
@@ -16,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
@@ -28,7 +32,10 @@ public class DefaultStingrayHttpResponse implements StingrayHttpResponse {
     private final Response response;
     private final HttpResponse httpResponse;
 
-    DefaultStingrayHttpResponse(String requestUrl, Map<String, StingrayHttpHeader> requestHeaders, HttpEntity requestEntity, Response response) {
+    DefaultStingrayHttpResponse(String requestUrl,
+                                Map<String, StingrayHttpHeader> requestHeaders,
+                                HttpEntity requestEntity,
+                                Response response) {
         this.requestUrl = requestUrl;
         this.requestHeaders = requestHeaders;
         this.requestEntity = requestEntity;
@@ -107,6 +114,40 @@ public class DefaultStingrayHttpResponse implements StingrayHttpResponse {
     }
 
     @Override
+    public <R> R contentAs(final StingrayHttpExceptionalStringFunction<R> converter) {
+        try {
+            return converter.apply(contentAsString());
+        } catch (Exception e) {
+            throw StingrayHttpClientException.builder()
+                    .withUrl(requestUrl)
+                    .withRequestHeaders(requestHeaders)
+                    .withRequestBody(requestEntity)
+                    .withStatusCode(status())
+                    .withResponseHeaders(headerNames().stream().collect(Collectors.toMap(k -> k, k -> toStingrayHeaders(k, httpResponse.getHeaders(k)))))
+                    .build();
+        }
+    }
+
+    @Override
+    public <R> R contentAs(final StingrayHttpExceptionalStreamFunction<R> converter) {
+        HttpEntity entity = httpResponse.getEntity();
+        if (entity == null) {
+            return null;
+        }
+        try {
+            return converter.apply(entity.getContent());
+        } catch (Exception e) {
+            throw StingrayHttpClientException.builder()
+                    .withUrl(requestUrl)
+                    .withRequestHeaders(requestHeaders)
+                    .withRequestBody(requestEntity)
+                    .withStatusCode(status())
+                    .withResponseHeaders(headerNames().stream().collect(Collectors.toMap(k -> k, k -> toStingrayHeaders(k, httpResponse.getHeaders(k)))))
+                    .build();
+        }
+    }
+
+    @Override
     public String contentAsString() {
         HttpEntity entity = httpResponse.getEntity();
         if (entity == null) {
@@ -125,7 +166,8 @@ public class DefaultStingrayHttpResponse implements StingrayHttpResponse {
         }
     }
 
-    StingrayHttpHeader toStingrayHeaders(String name, Header[] header) {
+    StingrayHttpHeader toStingrayHeaders(String name,
+                                         Header[] header) {
         return new DefaultStingrayHttpHeader(name, Arrays.stream(header).map(NameValuePair::getValue).collect(Collectors.toList()));
     }
 

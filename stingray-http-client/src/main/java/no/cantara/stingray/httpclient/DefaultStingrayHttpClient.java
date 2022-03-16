@@ -1,5 +1,7 @@
 package no.cantara.stingray.httpclient;
 
+import no.cantara.stingray.httpclient.functionalinterfaces.StingrayHttpExceptionalStreamSupplier;
+import no.cantara.stingray.httpclient.functionalinterfaces.StingrayHttpExceptionalStringSupplier;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -28,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class DefaultStingrayHttpClient implements StingrayHttpClient {
 
@@ -196,9 +200,33 @@ public class DefaultStingrayHttpClient implements StingrayHttpClient {
         }
 
         @Override
+        public DefaultRequestBuilder bodyJson(StingrayHttpExceptionalStringSupplier jsonSupplier) throws StingrayHttpClientException {
+            try {
+                return bodyJson(jsonSupplier.get());
+            } catch (RuntimeException e) { //JsonProcessingException?
+                throw StingrayHttpClientException.builder()
+                        .withUrl(toUri().toString())
+                        .withRequestHeaders(headers)
+                        .build();
+            }
+        }
+
+        @Override
         public DefaultRequestBuilder body(String body) {
             entity = new StringEntity(body, ContentType.create("text/plain", StandardCharsets.UTF_8));
             return this;
+        }
+
+        @Override
+        public DefaultRequestBuilder body(StingrayHttpExceptionalStringSupplier jsonSupplier) throws StingrayHttpClientException {
+            try {
+                return body(jsonSupplier.get());
+            } catch (RuntimeException e) { //JsonProcessingException?
+                throw StingrayHttpClientException.builder()
+                        .withUrl(toUri().toString())
+                        .withRequestHeaders(headers)
+                        .build();
+            }
         }
 
         @Override
@@ -208,9 +236,33 @@ public class DefaultStingrayHttpClient implements StingrayHttpClient {
         }
 
         @Override
+        public DefaultRequestBuilder body(StingrayHttpExceptionalStringSupplier jsonSupplier, String mimeType) throws StingrayHttpClientException {
+            try {
+                return body(jsonSupplier.get(), mimeType);
+            } catch (RuntimeException e) { //JsonProcessingException?
+                throw StingrayHttpClientException.builder()
+                        .withUrl(toUri().toString())
+                        .withRequestHeaders(headers)
+                        .build();
+            }
+        }
+
+        @Override
         public DefaultRequestBuilder body(String body, String mimeType, Charset charset) {
             entity = new StringEntity(body, ContentType.create(mimeType, charset));
             return this;
+        }
+
+        @Override
+        public DefaultRequestBuilder body(StingrayHttpExceptionalStringSupplier jsonSupplier, String mimeType, Charset charset) throws StingrayHttpClientException {
+            try {
+                return body(jsonSupplier.get(), mimeType, charset);
+            } catch (RuntimeException e) { //JsonProcessingException?
+                throw StingrayHttpClientException.builder()
+                        .withUrl(toUri().toString())
+                        .withRequestHeaders(headers)
+                        .build();
+            }
         }
 
         @Override
@@ -220,9 +272,33 @@ public class DefaultStingrayHttpClient implements StingrayHttpClient {
         }
 
         @Override
+        public DefaultRequestBuilder bodyJson(StingrayHttpExceptionalStreamSupplier jsonSupplier) throws StingrayHttpClientException {
+            try {
+                return bodyJson(jsonSupplier.get());
+            } catch (RuntimeException e) { //JsonProcessingException?
+                throw StingrayHttpClientException.builder()
+                        .withUrl(toUri().toString())
+                        .withRequestHeaders(headers)
+                        .build();
+            }
+        }
+
+        @Override
         public DefaultRequestBuilder body(InputStream body) {
             entity = new InputStreamEntity(body, ContentType.APPLICATION_OCTET_STREAM);
             return this;
+        }
+
+        @Override
+        public DefaultRequestBuilder body(StingrayHttpExceptionalStreamSupplier jsonSupplier) throws StingrayHttpClientException {
+            try {
+                return body(jsonSupplier.get());
+            } catch (RuntimeException e) { //JsonProcessingException?
+                throw StingrayHttpClientException.builder()
+                        .withUrl(toUri().toString())
+                        .withRequestHeaders(headers)
+                        .build();
+            }
         }
 
         @Override
@@ -232,9 +308,33 @@ public class DefaultStingrayHttpClient implements StingrayHttpClient {
         }
 
         @Override
+        public DefaultRequestBuilder body(StingrayHttpExceptionalStreamSupplier jsonSupplier, String mimeType) throws StingrayHttpClientException {
+            try {
+                return body(jsonSupplier.get(), mimeType);
+            } catch (RuntimeException e) { //JsonProcessingException?
+                throw StingrayHttpClientException.builder()
+                        .withUrl(toUri().toString())
+                        .withRequestHeaders(headers)
+                        .build();
+            }
+        }
+
+        @Override
         public DefaultRequestBuilder body(InputStream body, String mimeType, Charset charset) {
             entity = new InputStreamEntity(body, ContentType.create(mimeType, charset));
             return this;
+        }
+
+        @Override
+        public DefaultRequestBuilder body(StingrayHttpExceptionalStreamSupplier jsonSupplier, String mimeType, Charset charset) throws StingrayHttpClientException {
+            try {
+                return body(jsonSupplier.get(), mimeType, charset);
+            } catch (RuntimeException e) { //JsonProcessingException?
+                throw StingrayHttpClientException.builder()
+                        .withUrl(toUri().toString())
+                        .withRequestHeaders(headers)
+                        .build();
+            }
         }
 
         @Override
@@ -314,16 +414,16 @@ public class DefaultStingrayHttpClient implements StingrayHttpClient {
             }
         }
 
-        URI toUri(String pathAndQuery) {
+        URI toUri() {
+            String queryString = URLEncodedUtils.format(queryParams, StandardCharsets.UTF_8);
+            String pathAndQuery = path + (queryString.isEmpty() ? "" : (path.contains("?") ? "&" : "?") + queryString);
             return URI.create(scheme + "://" + host + ":" + port + basePath + pathAndQuery);
         }
 
         @Override
         public StingrayHttpResponse execute() {
             try {
-                String queryString = URLEncodedUtils.format(queryParams, StandardCharsets.UTF_8);
-                String pathAndQuery = path + (queryString.isEmpty() ? "" : (path.contains("?") ? "&" : "?") + queryString);
-                URI uri = toUri(pathAndQuery);
+                URI uri = toUri();
                 Request request;
                 switch (method) {
                     case GET:

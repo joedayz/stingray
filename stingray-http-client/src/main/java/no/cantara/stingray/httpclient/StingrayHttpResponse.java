@@ -1,7 +1,12 @@
 package no.cantara.stingray.httpclient;
 
+import no.cantara.stingray.httpclient.functionalinterfaces.StingrayHttpExceptionalStreamFunction;
+import no.cantara.stingray.httpclient.functionalinterfaces.StingrayHttpExceptionalStringFunction;
+
 import java.io.InputStream;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 interface StingrayHttpResponse {
 
@@ -20,6 +25,10 @@ interface StingrayHttpResponse {
     List<String> header(String name);
 
     List<String> headerNames();
+
+    <R> R contentAs(StingrayHttpExceptionalStringFunction<R> converter);
+
+    <R> R contentAs(StingrayHttpExceptionalStreamFunction<R> converter);
 
     String contentAsString();
 
