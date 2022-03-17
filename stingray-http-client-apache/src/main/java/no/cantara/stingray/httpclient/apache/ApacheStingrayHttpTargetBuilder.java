@@ -51,7 +51,7 @@ class ApacheStingrayHttpTargetBuilder implements StingrayHttpTargetBuilder {
 
     @Override
     public ApacheStingrayHttpTarget build() {
-        URI uri = URI.create(scheme + "://" + host + ":" + port + ApacheStingrayUtils.normalizeBasePath(basePath));
+        URI uri = URI.create(scheme + "://" + host + (port > 0 ? ":" + port : "") + ApacheStingrayUtils.normalizeBasePath(basePath));
         return new ApacheStingrayHttpTarget(uri);
     }
 }
