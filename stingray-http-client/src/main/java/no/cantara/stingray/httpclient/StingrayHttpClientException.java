@@ -47,6 +47,18 @@ public class StingrayHttpClientException extends RuntimeException {
         return responseBody;
     }
 
+    @Override
+    public String toString() {
+        return "StingrayHttpClientException{" +
+                "url='" + getUrl() + '\'' +
+                ", requestHeaders=" + getRequestHeaders() +
+                ", requestBody=" + getRequestBody() +
+                ", statusCode=" + getStatusCode() +
+                ", responseHeaders=" + getResponseHeaders() +
+                ", responseBody='" + getResponseBody() + '\'' +
+                '}';
+    }
+
     public static Builder builder() {
         return new Builder();
     }
