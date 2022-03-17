@@ -17,6 +17,9 @@ public class ApacheStringrayHttpRequestBody implements StingrayRequestBody {
 
     @Override
     public String asString() {
+        if (entity == null) {
+            return null;
+        }
         try {
             return EntityUtils.toString(entity);
         } catch (IOException e) {
