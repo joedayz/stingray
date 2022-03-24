@@ -27,16 +27,19 @@ import static java.util.Optional.ofNullable;
 
 class ApacheStingrayHttpResponse implements StingrayHttpResponse {
 
+    private final String method;
     private final String requestUrl;
     private final Map<String, StingrayHttpHeader> requestHeaders;
     private final HttpEntity requestEntity;
     private final Response response;
     private final HttpResponse httpResponse;
 
-    ApacheStingrayHttpResponse(String requestUrl,
+    ApacheStingrayHttpResponse(String method,
+                               String requestUrl,
                                Map<String, StingrayHttpHeader> requestHeaders,
                                HttpEntity requestEntity,
                                Response response) {
+        this.method = method;
         this.requestUrl = requestUrl;
         this.requestHeaders = requestHeaders;
         this.requestEntity = requestEntity;
@@ -52,11 +55,21 @@ class ApacheStingrayHttpResponse implements StingrayHttpResponse {
     public StingrayHttpResponse isSuccessful() throws StingrayHttpClientException {
         int statusCode = httpResponse.getStatusLine().getStatusCode();
         if (statusCode < 200 || 300 <= statusCode) {
+            String responseBody = null;
+            try {
+                HttpEntity entity = httpResponse.getEntity();
+                responseBody = entity == null ? null : EntityUtils.toString(entity);
+            } catch (IOException e) {
+                // ignore
+            }
             throw StingrayHttpClientException.builder()
+                    .withMessage("Request was not successful, status-code not in 2xx range.")
+                    .withMethod(method)
                     .withUrl(requestUrl)
                     .withRequestHeaders(requestHeaders)
                     .withRequestBody(new ApacheStringrayHttpRequestBody(requestEntity))
                     .withStatusCode(statusCode)
+                    .withResponseBody(responseBody)
                     .build();
         }
         return this;
@@ -66,11 +79,21 @@ class ApacheStingrayHttpResponse implements StingrayHttpResponse {
     public StingrayHttpResponse hasStatusCode(int status) throws StingrayHttpClientException {
         int statusCode = httpResponse.getStatusLine().getStatusCode();
         if (statusCode != status) {
+            String responseBody = null;
+            try {
+                HttpEntity entity = httpResponse.getEntity();
+                responseBody = entity == null ? null : EntityUtils.toString(entity);
+            } catch (IOException e) {
+                // ignore
+            }
             throw StingrayHttpClientException.builder()
+                    .withMessage("Request did not response with status " + status)
+                    .withMethod(method)
                     .withUrl(requestUrl)
                     .withRequestHeaders(requestHeaders)
                     .withRequestBody(new ApacheStringrayHttpRequestBody(requestEntity))
                     .withStatusCode(statusCode)
+                    .withResponseBody(responseBody)
                     .build();
         }
         return this;
@@ -116,17 +139,7 @@ class ApacheStingrayHttpResponse implements StingrayHttpResponse {
 
     @Override
     public <R> R contentAs(final StingrayHttpExceptionalStringFunction<R> converter) throws StingrayHttpClientException {
-        try {
-            return converter.apply(contentAsString());
-        } catch (Exception e) {
-            throw StingrayHttpClientException.builder()
-                    .withUrl(requestUrl)
-                    .withRequestHeaders(requestHeaders)
-                    .withRequestBody(new ApacheStringrayHttpRequestBody(requestEntity))
-                    .withStatusCode(status())
-                    .withResponseHeaders(headerNames().stream().collect(Collectors.toMap(k -> k, k -> toStingrayHeaders(k, httpResponse.getHeaders(k)))))
-                    .build();
-        }
+        return converter.apply(contentAsString());
     }
 
     @Override
@@ -138,12 +151,22 @@ class ApacheStingrayHttpResponse implements StingrayHttpResponse {
         try {
             return converter.apply(entity.getContent());
         } catch (Exception e) {
+            String responseBody = null;
+            try {
+                responseBody = EntityUtils.toString(entity);
+            } catch (IOException ex) {
+                // ignore
+            }
             throw StingrayHttpClientException.builder()
+                    .withMessage("Request was not successful, status-code not in 2xx range.")
+                    .withCause(e)
+                    .withMethod(method)
                     .withUrl(requestUrl)
                     .withRequestHeaders(requestHeaders)
                     .withRequestBody(new ApacheStringrayHttpRequestBody(requestEntity))
                     .withStatusCode(status())
                     .withResponseHeaders(headerNames().stream().collect(Collectors.toMap(k -> k, k -> toStingrayHeaders(k, httpResponse.getHeaders(k)))))
+                    .withResponseBody(responseBody)
                     .build();
         }
     }
@@ -158,6 +181,9 @@ class ApacheStingrayHttpResponse implements StingrayHttpResponse {
             return EntityUtils.toString(entity, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw StingrayHttpClientException.builder()
+                    .withMessage("Request was not successful, status-code not in 2xx range.")
+                    .withCause(e)
+                    .withMethod(method)
                     .withUrl(requestUrl)
                     .withRequestHeaders(requestHeaders)
                     .withRequestBody(new ApacheStringrayHttpRequestBody(requestEntity))

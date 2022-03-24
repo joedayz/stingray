@@ -29,7 +29,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -93,104 +92,125 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
 
     @Override
     public ApacheStingrayHttpRequestBuilder setHeader(String name, String value) {
-        headers.put(name, new ApacheStingrayHttpHeader(name, Collections.singletonList(value)));
+        headers.put(name, new ApacheStingrayHttpHeader(name, value));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder bodyJson(String body) {
-        entity = new StringEntity(body, ContentType.APPLICATION_JSON);
+        setEntity(new StringEntity(body, ContentType.APPLICATION_JSON));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(String body) {
-        entity = new StringEntity(body, ContentType.create("text/plain", StandardCharsets.UTF_8));
+        setEntity(new StringEntity(body, ContentType.create("text/plain", StandardCharsets.UTF_8)));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(String body, String mimeType) {
-        entity = new StringEntity(body, ContentType.create(mimeType));
+        setEntity(new StringEntity(body, ContentType.create(mimeType)));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(String body, String mimeType, Charset charset) {
-        entity = new StringEntity(body, ContentType.create(mimeType, charset));
+        setEntity(new StringEntity(body, ContentType.create(mimeType, charset)));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder bodyJson(InputStream body) {
-        entity = new InputStreamEntity(body, ContentType.APPLICATION_JSON);
+        setEntity(new InputStreamEntity(body, ContentType.APPLICATION_JSON));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(InputStream body) {
-        entity = new InputStreamEntity(body, ContentType.APPLICATION_OCTET_STREAM);
+        setEntity(new InputStreamEntity(body, ContentType.APPLICATION_OCTET_STREAM));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(InputStream body, String mimeType) {
-        entity = new InputStreamEntity(body, ContentType.create(mimeType));
+        setEntity(new InputStreamEntity(body, ContentType.create(mimeType)));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(InputStream body, String mimeType, Charset charset) {
-        entity = new InputStreamEntity(body, ContentType.create(mimeType, charset));
+        setEntity(new InputStreamEntity(body, ContentType.create(mimeType, charset)));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder bodyJson(byte[] body) {
-        entity = new ByteArrayEntity(body, ContentType.APPLICATION_JSON);
+        setEntity(new ByteArrayEntity(body, ContentType.APPLICATION_JSON));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(byte[] body) {
-        entity = new ByteArrayEntity(body, ContentType.APPLICATION_OCTET_STREAM);
+        setEntity(new ByteArrayEntity(body, ContentType.APPLICATION_OCTET_STREAM));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(byte[] body, String mimeType) {
-        entity = new ByteArrayEntity(body, ContentType.create(mimeType));
+        setEntity(new ByteArrayEntity(body, ContentType.create(mimeType)));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(byte[] body, String mimeType, Charset charset) {
-        entity = new ByteArrayEntity(body, ContentType.create(mimeType, charset));
+        setEntity(new ByteArrayEntity(body, ContentType.create(mimeType, charset)));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder bodyJson(File body) {
-        entity = new FileEntity(body, ContentType.APPLICATION_JSON);
+        setEntity(new FileEntity(body, ContentType.APPLICATION_JSON));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(File body) {
-        entity = new FileEntity(body);
+        setEntity(new FileEntity(body));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(File body, String mimeType) {
-        entity = new FileEntity(body, ContentType.create(mimeType));
+        setEntity(new FileEntity(body, ContentType.create(mimeType)));
         return this;
     }
 
     @Override
     public ApacheStingrayHttpRequestBuilder body(File body, String mimeType, Charset charset) {
-        entity = new FileEntity(body, ContentType.create(mimeType, charset));
+        setEntity(new FileEntity(body, ContentType.create(mimeType, charset)));
         return this;
+    }
+
+    private void setEntity(HttpEntity entity) {
+        this.entity = entity;
+        /*
+        // TODO Resolve these headers for debug-purposes only on exception and/or state dump
+        if (entity != null) {
+            Header contentType = entity.getContentType();
+            if (contentType != null) {
+                headers.put(contentType.getName(), new ApacheStingrayHttpHeader(contentType.getName(), contentType.getValue()));
+            }
+            Header contentEncoding = entity.getContentEncoding();
+            if (contentEncoding != null) {
+                headers.put(contentEncoding.getName(), new ApacheStingrayHttpHeader(contentEncoding.getName(), contentEncoding.getValue()));
+            }
+            long contentLength = entity.getContentLength();
+            if (contentLength >= 0) {
+                headers.put(HttpHeaders.CONTENT_LENGTH, new ApacheStingrayHttpHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength)));
+            }
+        }
+        */
     }
 
     @Override
@@ -199,6 +219,9 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
             return bodyJson(jsonSupplier.get());
         } catch (RuntimeException e) { //JsonProcessingException?
             throw StingrayHttpClientException.builder()
+                    .withMessage("While attempting to resolve request body")
+                    .withCause(e)
+                    .withMethod(method.name())
                     .withUrl(toUri().toString())
                     .withRequestHeaders(headers)
                     .build();
@@ -208,9 +231,13 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
     @Override
     public ApacheStingrayHttpRequestBuilder body(StingrayHttpExceptionalStringSupplier jsonSupplier) throws StingrayHttpClientException {
         try {
-            return body(jsonSupplier.get());
+            String body = jsonSupplier.get();
+            return body(body);
         } catch (RuntimeException e) { //JsonProcessingException?
             throw StingrayHttpClientException.builder()
+                    .withCause(e)
+                    .withMessage("While resolving request body supplier")
+                    .withMethod(method.name())
                     .withUrl(toUri().toString())
                     .withRequestHeaders(headers)
                     .build();
@@ -223,6 +250,8 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
             return body(jsonSupplier.get(), mimeType);
         } catch (RuntimeException e) { //JsonProcessingException?
             throw StingrayHttpClientException.builder()
+                    .withCause(e)
+                    .withMethod(method.name())
                     .withUrl(toUri().toString())
                     .withRequestHeaders(headers)
                     .build();
@@ -235,6 +264,8 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
             return body(jsonSupplier.get(), mimeType, charset);
         } catch (RuntimeException e) { //JsonProcessingException?
             throw StingrayHttpClientException.builder()
+                    .withCause(e)
+                    .withMethod(method.name())
                     .withUrl(toUri().toString())
                     .withRequestHeaders(headers)
                     .build();
@@ -247,6 +278,8 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
             return bodyJson(jsonSupplier.get());
         } catch (RuntimeException e) { //JsonProcessingException?
             throw StingrayHttpClientException.builder()
+                    .withCause(e)
+                    .withMethod(method.name())
                     .withUrl(toUri().toString())
                     .withRequestHeaders(headers)
                     .build();
@@ -260,6 +293,8 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
             return body(jsonSupplier.get());
         } catch (RuntimeException e) { //JsonProcessingException?
             throw StingrayHttpClientException.builder()
+                    .withCause(e)
+                    .withMethod(method.name())
                     .withUrl(toUri().toString())
                     .withRequestHeaders(headers)
                     .build();
@@ -272,6 +307,8 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
             return body(jsonSupplier.get(), mimeType);
         } catch (RuntimeException e) { //JsonProcessingException?
             throw StingrayHttpClientException.builder()
+                    .withCause(e)
+                    .withMethod(method.name())
                     .withUrl(toUri().toString())
                     .withRequestHeaders(headers)
                     .build();
@@ -284,6 +321,8 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
             return body(jsonSupplier.get(), mimeType, charset);
         } catch (RuntimeException e) { //JsonProcessingException?
             throw StingrayHttpClientException.builder()
+                    .withCause(e)
+                    .withMethod(method.name())
                     .withUrl(toUri().toString())
                     .withRequestHeaders(headers)
                     .build();
@@ -377,7 +416,7 @@ class ApacheStingrayHttpRequestBuilder implements StingrayHttpRequestBuilder {
                 request.body(entity);
             }
             Response response = request.execute();
-            return new ApacheStingrayHttpResponse(uri.toString(), headers, entity, response);
+            return new ApacheStingrayHttpResponse(method.name(), uri.toString(), headers, entity, response);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

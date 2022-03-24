@@ -5,6 +5,7 @@ import java.util.Map;
 public class StingrayHttpClientException extends RuntimeException {
 
     // request
+    private final String method;
     private final String url;
     private final Map<String, StingrayHttpHeader> requestHeaders;
     private final StingrayRequestBody requestBody;
@@ -14,13 +15,19 @@ public class StingrayHttpClientException extends RuntimeException {
     private final Map<String, StingrayHttpHeader> responseHeaders;
     private final String responseBody;
 
-    private StingrayHttpClientException(String url, Map<String, StingrayHttpHeader> requestHeaders, StingrayRequestBody requestBody, int statusCode, Map<String, StingrayHttpHeader> responseHeaders, String responseBody) {
+    private StingrayHttpClientException(String message, Throwable cause, String method, String url, Map<String, StingrayHttpHeader> requestHeaders, StingrayRequestBody requestBody, int statusCode, Map<String, StingrayHttpHeader> responseHeaders, String responseBody) {
+        super(message, cause);
+        this.method = method;
         this.url = url;
         this.requestHeaders = requestHeaders;
         this.requestBody = requestBody;
         this.statusCode = statusCode;
         this.responseHeaders = responseHeaders;
         this.responseBody = responseBody;
+    }
+
+    public String getMethod() {
+        return method;
     }
 
     public String getUrl() {
@@ -65,7 +72,11 @@ public class StingrayHttpClientException extends RuntimeException {
 
     public static class Builder {
 
+        private String message = "";
+        private Throwable cause;
+
         // request
+        private String method;
         private String url;
         private Map<String, StingrayHttpHeader> requestHeaders;
         private StingrayRequestBody requestBody;
@@ -76,6 +87,21 @@ public class StingrayHttpClientException extends RuntimeException {
         private String responseBody;
 
         private Builder() {
+        }
+
+        public Builder withMethod(String method) {
+            this.method = method;
+            return this;
+        }
+
+        public Builder withMessage(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public Builder withCause(Throwable cause) {
+            this.cause = cause;
+            return this;
         }
 
         public Builder withUrl(String url) {
@@ -109,7 +135,61 @@ public class StingrayHttpClientException extends RuntimeException {
         }
 
         public StingrayHttpClientException build() {
-            return new StingrayHttpClientException(url, requestHeaders, requestBody, statusCode, responseHeaders, responseBody);
+            StringBuilder sb = new StringBuilder();
+            sb.append(message);
+            sb.append("\nREQUEST:\n");
+            if (method != null) {
+                sb.append(method);
+                sb.append(" ");
+            }
+            if (url != null) {
+                sb.append(url);
+            }
+            if (method != null || url != null) {
+                sb.append("\n");
+            }
+            if (requestHeaders != null) {
+                for (Map.Entry<String, StingrayHttpHeader> entry : requestHeaders.entrySet()) {
+                    StingrayHttpHeader header = entry.getValue();
+                    for (String value : header.all()) {
+                        sb.append(header.name());
+                        sb.append(": ");
+                        sb.append(value);
+                        sb.append("\n");
+                    }
+                }
+            }
+            if (requestBody != null) {
+                try {
+                    String body = requestBody.asString();
+                    if (body != null) {
+                        sb.append(body);
+                        sb.append("\n");
+                    }
+                } catch (Throwable t) {
+                    sb.append("Unable to get request-body. Stingray encountered Exception while attempting to resolve it.\n");
+                }
+            }
+            sb.append("RESPONSE:\n");
+            sb.append(statusCode);
+            // TODO Get response-status-message, e.g. "OK"
+            sb.append("\n");
+            if (responseHeaders != null) {
+                for (Map.Entry<String, StingrayHttpHeader> entry : responseHeaders.entrySet()) {
+                    StingrayHttpHeader header = entry.getValue();
+                    for (String value : header.all()) {
+                        sb.append(header.name());
+                        sb.append(": ");
+                        sb.append(value);
+                        sb.append("\n");
+                    }
+                }
+            }
+            if (responseBody != null) {
+                sb.append(responseBody);
+                sb.append("\n");
+            }
+            return new StingrayHttpClientException(sb.toString(), cause, method, url, requestHeaders, requestBody, statusCode, responseHeaders, responseBody);
         }
     }
 }

@@ -2,6 +2,7 @@ package no.cantara.stingray.httpclient.apache;
 
 import no.cantara.stingray.httpclient.StingrayHttpHeader;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,6 +16,13 @@ class ApacheStingrayHttpHeader implements StingrayHttpHeader {
         Objects.requireNonNull(values);
         this.name = name;
         this.values = values;
+    }
+
+    ApacheStingrayHttpHeader(String name, String value) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(value);
+        this.name = name;
+        this.values = Collections.singletonList(value);
     }
 
     @Override

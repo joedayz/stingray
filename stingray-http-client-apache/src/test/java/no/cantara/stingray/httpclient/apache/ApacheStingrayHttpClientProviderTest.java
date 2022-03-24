@@ -109,6 +109,8 @@ public class ApacheStingrayHttpClientProviderTest {
                     .isSuccessful();
             fail();
         } catch (StingrayHttpClientException e) {
+            System.err.printf("%s", e.getMessage());
+            e.printStackTrace();
         }
     }
 

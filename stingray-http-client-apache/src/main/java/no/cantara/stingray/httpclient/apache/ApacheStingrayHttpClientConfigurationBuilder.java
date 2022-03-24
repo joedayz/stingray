@@ -4,7 +4,6 @@ import no.cantara.stingray.httpclient.StingrayHttpClientConfigurationBuilder;
 import no.cantara.stingray.httpclient.StingrayHttpHeader;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -43,7 +42,7 @@ class ApacheStingrayHttpClientConfigurationBuilder implements StingrayHttpClient
 
     @Override
     public ApacheStingrayHttpClientConfigurationBuilder withDefaultHeader(String name, String value) {
-        defaultHeaderByKey.put(name, new ApacheStingrayHttpHeader(name, Collections.singletonList(value)));
+        defaultHeaderByKey.put(name, new ApacheStingrayHttpHeader(name, value));
         return this;
     }
 
