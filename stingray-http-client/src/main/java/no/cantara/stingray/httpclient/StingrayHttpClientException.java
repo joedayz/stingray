@@ -39,6 +39,9 @@ public class StingrayHttpClientException extends RuntimeException {
     }
 
     public String getRequestBody() {
+        if (requestBody == null) {
+            return null;
+        }
         return requestBody.asString();
     }
 

@@ -10,7 +10,6 @@ import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
@@ -31,24 +30,18 @@ class ApacheStingrayHttpResponse implements StingrayHttpResponse {
     private final String requestUrl;
     private final Map<String, StingrayHttpHeader> requestHeaders;
     private final HttpEntity requestEntity;
-    private final Response response;
     private final HttpResponse httpResponse;
 
     ApacheStingrayHttpResponse(String method,
                                String requestUrl,
                                Map<String, StingrayHttpHeader> requestHeaders,
                                HttpEntity requestEntity,
-                               Response response) {
+                               HttpResponse httpResponse) {
         this.method = method;
         this.requestUrl = requestUrl;
         this.requestHeaders = requestHeaders;
         this.requestEntity = requestEntity;
-        this.response = response;
-        try {
-            this.httpResponse = response.returnResponse();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        this.httpResponse = httpResponse;
     }
 
     @Override

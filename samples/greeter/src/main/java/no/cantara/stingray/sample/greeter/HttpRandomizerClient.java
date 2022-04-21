@@ -1,77 +1,57 @@
 package no.cantara.stingray.sample.greeter;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
-import org.apache.http.util.EntityUtils;
+import no.cantara.stingray.httpclient.StingrayHttpClient;
+import no.cantara.stingray.httpclient.StingrayHttpClientFactory;
+import no.cantara.stingray.httpclient.StingrayHttpClients;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 public class HttpRandomizerClient implements RandomizerClient {
 
-    private final String baseUrl;
+    private final StingrayHttpClient httpClient;
 
     public HttpRandomizerClient(String baseUrl) {
-        this.baseUrl = baseUrl;
+        StingrayHttpClientFactory factory = StingrayHttpClients.factory();
+        httpClient = factory.newClient()
+                .useTarget(targetBuilder -> targetBuilder
+                        .withUrl(baseUrl)
+                        .build())
+                .useConfiguration(configurationBuilder -> configurationBuilder
+                        .connectTimeout(Duration.ofSeconds(5))
+                        .socketTimeout(Duration.ofSeconds(10))
+                        .build())
+                .build();
     }
 
     @Override
     public String getRandomString(String token, int maxLength) {
-        try {
-            Response response = Request.Get(baseUrl + "/str/" + maxLength)
-                    .connectTimeout(5000)
-                    .socketTimeout(10000)
-                    .setHeader(HttpHeaders.AUTHORIZATION, token)
-                    .execute();
-            HttpResponse httpResponse = response.returnResponse();
-            if (httpResponse.getStatusLine().getStatusCode() != 200) {
-                throw new RuntimeException("Bad return from randomizer");
-            }
-            String result = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
-            return result;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        String result = httpClient.get()
+                .path("/str/" + maxLength)
+                .authorizationBearer(token)
+                .execute()
+                .hasStatusCode(200)
+                .contentAsString();
+        return result;
     }
 
     @Override
     public int getRandomInteger(String token, int upperBoundEx) {
-        try {
-            Response response = Request.Get(baseUrl + "/int/" + upperBoundEx)
-                    .connectTimeout(5000)
-                    .socketTimeout(10000)
-                    .setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .execute();
-            HttpResponse httpResponse = response.returnResponse();
-            int statusCode = httpResponse.getStatusLine().getStatusCode();
-            if (statusCode != 200) {
-                throw new RuntimeException("Bad return from randomizer, statusCode: " + statusCode);
-            }
-            String resultAsString = EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
-            int result = Integer.parseInt(resultAsString);
-            return result;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        String resultAsString = httpClient.get()
+                .path("/int/" + upperBoundEx)
+                .authorizationBearer(token)
+                .execute()
+                .hasStatusCode(200)
+                .contentAsString();
+        int result = Integer.parseInt(resultAsString);
+        return result;
     }
 
     @Override
     public void reseed(String token, long seed) {
-        try {
-            Response response = Request.Put(baseUrl + "/seed/" + seed)
-                    .connectTimeout(5000)
-                    .socketTimeout(10000)
-                    .setHeader(HttpHeaders.AUTHORIZATION, token)
-                    .execute();
-            HttpResponse httpResponse = response.returnResponse();
-            if (httpResponse.getStatusLine().getStatusCode() != 200) {
-                throw new RuntimeException("Bad return from randomizer");
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        httpClient.put()
+                .path("/seed/" + seed)
+                .authorizationBearer(token)
+                .execute()
+                .hasStatusCode(200);
     }
 }

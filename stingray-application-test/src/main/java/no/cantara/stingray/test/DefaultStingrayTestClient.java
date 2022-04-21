@@ -3,11 +3,22 @@ package no.cantara.stingray.test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
+import org.apache.http.client.methods.Configurable;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
@@ -288,45 +299,63 @@ public class DefaultStingrayTestClient implements StingrayTestClient {
                 String queryString = URLEncodedUtils.format(queryParams, StandardCharsets.UTF_8);
                 String pathAndQuery = path + (queryString.isEmpty() ? "" : (path.contains("?") ? "&" : "?") + queryString);
                 URI uri = toUri(pathAndQuery);
-                Request request;
+                HttpRequestBase request;
                 switch (method) {
                     case GET:
-                        request = Request.Get(uri);
+                        request = new HttpGet(uri);
                         break;
                     case POST:
-                        request = Request.Post(uri);
+                        request = new HttpPost(uri);
                         break;
                     case PUT:
-                        request = Request.Put(uri);
+                        request = new HttpPut(uri);
                         break;
                     case OPTIONS:
-                        request = Request.Options(uri);
+                        request = new HttpOptions(uri);
                         break;
                     case HEAD:
-                        request = Request.Head(uri);
+                        request = new HttpHead(uri);
                         break;
                     case DELETE:
-                        request = Request.Delete(uri);
+                        request = new HttpDeleteWithBody(uri);
                         break;
                     case PATCH:
-                        request = Request.Patch(uri);
+                        request = new HttpPatch(uri);
                         break;
                     case TRACE:
-                        request = Request.Trace(uri);
+                        request = new HttpTrace(uri);
                         break;
                     default:
                         throw new IllegalArgumentException("HttpMethod not supported: " + method);
                 }
-                request.connectTimeout(connectTimeout);
-                request.socketTimeout(socketTimeout);
                 for (Map.Entry<String, String> header : headers.entrySet()) {
                     request.addHeader(header.getKey(), header.getValue());
                 }
                 if (entity != null) {
-                    request.body(entity);
+                    if (request instanceof HttpEntityEnclosingRequest) {
+                        ((HttpEntityEnclosingRequest) request).setEntity(entity);
+                    } else {
+                        throw new RuntimeException(method.name() + " request does not support a body as it is not an instance of " + HttpEntityEnclosingRequest.class.getName());
+                    }
                 }
-                Response response = request
-                        .execute();
+                HttpClient client = StingrayApacheHttpClientExecutors.CLIENT;
+                final RequestConfig.Builder builder;
+                if (client instanceof Configurable) {
+                    builder = RequestConfig.copy(((Configurable) client).getConfig());
+                } else {
+                    builder = RequestConfig.custom();
+                }
+                if (false) {
+                    builder.setExpectContinueEnabled(false);
+                }
+                builder.setSocketTimeout(socketTimeout);
+                builder.setConnectTimeout(connectTimeout);
+                if (false) {
+                    builder.setProxy(null);
+                }
+                final RequestConfig config = builder.build();
+                request.setConfig(config);
+                HttpResponse response = client.execute(request);
                 return new StingrayResponseHelper(response);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);

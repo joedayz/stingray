@@ -46,7 +46,7 @@ class ApacheStingrayHttpTargetBuilder implements StingrayHttpTargetBuilder {
         return withScheme(uri.getScheme())
                 .withHost(uri.getHost())
                 .withPort(uri.getPort())
-                .withPath(basePath);
+                .withPath(uri.getPath());
     }
 
     @Override

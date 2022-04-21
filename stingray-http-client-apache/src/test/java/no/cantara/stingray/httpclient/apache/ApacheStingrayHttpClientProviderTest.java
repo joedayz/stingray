@@ -65,6 +65,29 @@ public class ApacheStingrayHttpClientProviderTest {
     }
 
     @Test
+    public void deleteRequestWithBody() {
+        StingrayHttpClientFactory clientFactory = StingrayHttpClients.factory();
+        StingrayHttpClient client = clientFactory.newClient()
+                .useTarget(target -> target
+                        .withScheme("http")
+                        .withHost("localhost")
+                        .withPort(port)
+                        .build())
+                .build();
+
+        String responseJson = client.delete()
+                .path("/echo")
+                .bodyJson("{\"prop1\":\"val1\"}")
+                .execute()
+                .isSuccessful()
+                .contentAsString();
+
+        assertEquals("{\"prop1\":\"val1\"}", responseJson);
+
+        System.out.printf("Echo: %n%s%n", responseJson);
+    }
+
+    @Test
     public void clientWithoutBaseTarget() {
         StingrayHttpClientFactory clientFactory = StingrayHttpClients.factory();
         StingrayHttpClient client = clientFactory.newClient()

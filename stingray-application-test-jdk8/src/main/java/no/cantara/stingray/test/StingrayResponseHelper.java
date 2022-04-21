@@ -29,17 +29,11 @@ public class StingrayResponseHelper {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    private final org.apache.http.client.fluent.Response response;
     private final HttpResponse httpResponse;
     private final AtomicReference<Object> bodyRef = new AtomicReference<>();
 
-    StingrayResponseHelper(org.apache.http.client.fluent.Response response) {
-        this.response = response;
-        try {
-            this.httpResponse = response.returnResponse();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    StingrayResponseHelper(HttpResponse httpResponse) {
+        this.httpResponse = httpResponse;
     }
 
     public int status() {
