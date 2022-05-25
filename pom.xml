@@ -4,7 +4,7 @@
 
     <groupId>no.cantara.stingray</groupId>
     <artifactId>stingray-project</artifactId>
-    <version>1.6.11-SNAPSHOT</version>
+    <version>1.6.12-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Stingray-Project</name>
