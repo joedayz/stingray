@@ -4,8 +4,9 @@
 
     <parent>
         <groupId>no.cantara.stingray</groupId>
-        <artifactId>stingray-project</artifactId>
+        <artifactId>stingray-parent</artifactId>
         <version>1.6.13-SNAPSHOT</version>
+        <relativePath>../stingray-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>stingray-http-client-apache</artifactId>
