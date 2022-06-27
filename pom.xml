@@ -42,9 +42,6 @@
     </scm>
 
     <modules>
-        <module>stingray-parent-jdk8</module>
-        <module>stingray-application-jdk8</module>
-        <module>stingray-application-test-jdk8</module>
         <module>stingray-parent</module>
         <module>stingray-application</module>
         <module>stingray-application-test</module>
