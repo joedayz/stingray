@@ -21,7 +21,6 @@
         <jetty.version>11.0.11</jetty.version>
         <swagger.version>2.2.1</swagger.version>
         <jakarta.version>3.0.0</jakarta.version>
-        <jakarta_data.version>3.0.2</jakarta_data.version>
     </properties>
 
     <dependencyManagement>
@@ -44,7 +43,7 @@
             <dependency>
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>
-                <version>${jakarta_data.version}</version>
+                <version>3.0.2</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.containers</groupId>
@@ -118,12 +117,7 @@
             <dependency>
                 <groupId>jakarta.xml.bind</groupId>
                 <artifactId>jakarta.xml.bind-api</artifactId>
-                <version>${jakarta_data.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>jakarta.xml.bind</groupId>
-                <artifactId>jakarta.xml.bind-api</artifactId>
-                <version>${jakarta_data.version}</version>
+                <version>3.0.1</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
